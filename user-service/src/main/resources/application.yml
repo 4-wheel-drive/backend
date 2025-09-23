@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: user-service
+
+server:
+  port: 8081
+
+user:
+  feature-flag:
+    welcome-message: true
+
+jwt:
+  access-expire-ms: 200000
+  secret: "asdfasfaslkfjvkasjflskjvfkdsjvfklsjavlksjavslkj vflskj vfklsj vfsdjkvfshnaivueiup"
+  issuer: "hello"
