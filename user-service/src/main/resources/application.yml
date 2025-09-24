@@ -1,6 +1,19 @@
 spring:
   application:
     name: user-service
+  datasource:
+    url: jdbc:h2:mem:userdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true      # H2 콘솔 활성화
+      path: /h2-console  # 접속 경로 (http://localhost:8081/h2-console)
+  jpa:
+    hibernate:
+      ddl-auto: update   # 자동 테이블 생성 (옵션)
+    show-sql: true       # SQL 로깅
 
 server:
   port: 8081
