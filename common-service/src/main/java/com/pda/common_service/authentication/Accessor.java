@@ -1,4 +1,4 @@
-package com.pda.common_service.common;
+package com.pda.common_service.authentication;
 
 public record Accessor(AccessorRole accessorRole, Long memberId) {
     private static final Long GUEST_ID = 0L;

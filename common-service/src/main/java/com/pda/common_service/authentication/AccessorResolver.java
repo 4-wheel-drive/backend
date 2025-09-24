@@ -1,4 +1,4 @@
-package com.pda.common_service.common;
+package com.pda.common_service.authentication;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
