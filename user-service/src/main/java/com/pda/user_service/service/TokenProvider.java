@@ -36,7 +36,7 @@ public class TokenProvider {
                 .compact();
     }
 
-    public Jws<Claims> verify(String token) {
+    public Jws<Claims> validateToken(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -44,7 +44,7 @@ public class TokenProvider {
     }
 
     public String getSubject(String token) {
-        return verify(token)
+        return validateToken(token)
                 .getPayload()
                 .getSubject();
     }
