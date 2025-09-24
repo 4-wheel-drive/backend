@@ -25,8 +25,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Object>> login(
             @Valid @RequestBody AuthRequest.Login loginRequest
     ) {
-        String id = loginRequest.id();
-        String password = loginRequest.password();
+        String id = loginRequest.memberId();
+        String password = loginRequest.memberPassword();
         ResponseCookie responseCookie = authService.login(id, password);
 
         return ResponseEntity

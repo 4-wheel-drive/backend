@@ -8,7 +8,7 @@ public class AuthRequest {
             String memberId,
 
             @NotBlank(message = "PW는 공백이 될 수 없습니다")
-            String password
+            String memberPassword
     ) {
     }
 
