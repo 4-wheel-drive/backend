@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:h2:file:~/userdb;AUTO_SERVER=TRUE   # 파일 기반 DB
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop         # 엔티티 기반 테이블 생성
+    show-sql: true
+    defer-datasource-initialization: true   # data.sql 실행 순서 보장
+  sql:
+    init:
+      mode: always             # data.sql 실행
+
+server:
+  port: 8081
+
+user:
+  feature-flag:
+    welcome-message: true
+
+jwt:
+  access-expire-ms: 200000
+  secret: "asdfasfaslkfjvkasjflskjvfkdsjvfklsjavlksjavslkj vflskj vfklsj vfsdjkvfshnaivueiup"
+  issuer: "hello"

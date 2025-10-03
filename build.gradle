@@ -15,7 +15,7 @@ repositories {
 }
 
 
-allprojects {
+subprojects {
     group = 'com.pda-final-project'
     group = 'com.pda'
     version = '0.0.1-SNAPSHOT'
@@ -49,7 +49,7 @@ allprojects {
     }
 }
 
-project(":user-service") {
+project(":auth-service") {
     dependencies {
         implementation project(":common-service")
 
@@ -60,6 +60,12 @@ project(":user-service") {
 
         // bcrypt
         implementation 'org.mindrot:jbcrypt:0.4'
+    }
+}
+
+project(":strategy-service") {
+    dependencies {
+        implementation project(":common-service")
     }
 }
 
