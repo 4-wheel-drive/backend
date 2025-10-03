@@ -1,18 +1,18 @@
-package com.pda.strategy_service;
+package com.pda.auth_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication(scanBasePackages = {
-		"com.pda.strategy_service",
+		"com.pda.auth_service",
 		"com.pda.common_service"
 })
 @EnableJpaAuditing
-public class StrategyServiceApplication {
+public class AuthServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(StrategyServiceApplication.class, args);
+		SpringApplication.run(AuthServiceApplication.class, args);
 	}
 
 }

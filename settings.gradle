@@ -1,6 +1,6 @@
 rootProject.name = 'final-project'
 include 'market-service'
-include 'user-service'
+include 'auth-service'
 include 'trading-service'
 include 'strategy-service'
 include 'strategy-execution-service'
