@@ -1,6 +1,7 @@
 package com.pda.strategy_service.service;
 
 import com.pda.common_service.exception.MemberException;
+import com.pda.common_service.exception.StrategyException;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.common_service.stock.MemberStock;
 import com.pda.common_service.stock.MemberStockRepository;
@@ -47,5 +48,15 @@ public class StrategyServiceImpl implements StrategyService {
             }
         }
         return new ReadStrategies(strategyDtos);
+    }
+
+    @Override
+    public ReadStrategy getMonoStrategy(Long strategyId, Long memberId) {
+        Strategy strategy = strategyRepository.findById(strategyId)
+                .orElseThrow(() -> new StrategyException(ResponseMessage.GET_MONO_STRATEGY_SUCCESS));
+
+
+
+        return null;
     }
 }

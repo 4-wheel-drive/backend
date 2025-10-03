@@ -23,22 +23,22 @@ import lombok.NoArgsConstructor;
 public class Strategy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @ManyToOne
-    MemberStock memberStock;
+    private MemberStock memberStock;
 
     @OneToOne
-    StrategyProfitSummary strategyProfitSummary;
+    private StrategyProfitSummary strategyProfitSummary;
 
     @Column(length = 100)
-    String strategyName;
+    private String strategyName;
 
     @Enumerated(value = EnumType.STRING)
-    StrategyActivatedStatus strategyIsActivated;
+    private StrategyActivatedStatus strategyIsActivated;
 
     @Enumerated(value = EnumType.STRING)
-    StrategyExistedStatus strategyIsDeleted;
+    private StrategyExistedStatus strategyIsDeleted;
 
     public StrategyDto toDto(StockInfo stockInfo, BigDecimal profitAmount) {
         return new StrategyDto(

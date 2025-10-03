@@ -3,6 +3,7 @@ package com.pda.common_service.handler;
 
 import com.pda.common_service.exception.AuthException;
 import com.pda.common_service.exception.MemberException;
+import com.pda.common_service.exception.StrategyException;
 import com.pda.common_service.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MemberException.class)
     public ResponseEntity<ApiResponse<String>> handleMemberException(MemberException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getCode(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(StrategyException.class)
+    public ResponseEntity<ApiResponse<String>> handleStrategyException(StrategyException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.failure(ex.getCode(), ex.getMessage()));
