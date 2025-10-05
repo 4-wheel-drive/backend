@@ -10,6 +10,7 @@ import com.pda.common_service.stock.dto.StockInfo;
 import com.pda.common_service.user.domain.Member;
 import com.pda.common_service.user.repository.MemberRepository;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitDto;
+import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.domain.Strategy;
@@ -62,8 +63,8 @@ public class StrategyServiceImpl implements StrategyService {
         BigDecimal allCumulativeProfit = profitCalculator.allCumulativeProfit(strategy);
         BigDecimal weekCumulativeProfit = profitCalculator.weekCumulativeProfit(strategy);
         ProfitDto strategyProfit = new ProfitDto(allCumulativeProfit, weekCumulativeProfit);
+        ProfitSeries periodSeries = profitCalculator.getAllPeriodSeries(strategy);
 
-
-        return new ReadStrategy(strategyProfit);
+        return new ReadStrategy(strategyProfit, periodSeries);
     }
 }
