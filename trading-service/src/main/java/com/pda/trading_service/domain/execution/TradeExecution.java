@@ -1,10 +1,12 @@
 package com.pda.trading_service.domain.execution;
 
+import com.pda.common_service.BaseEntity;
 import com.pda.trading_service.domain.order.StockOrder;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,25 +20,25 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TradeExecution {
+public class TradeExecution extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @NotNull
-    private StockOrder order;
-
     @Enumerated(value = EnumType.STRING)
-    private TradeExecutionType executionType;
+    private TradeExecutionType tradeExecutionType;
 
     @NotNull
-    private Integer quantity;
+    private Integer tradeExecutionQuantity;
 
     @Column(nullable = false, precision = 19, scale = 4)
-    private BigDecimal executionPrice;
+    private BigDecimal tradeExecutionPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TradeExecutionStatus executionStatus = TradeExecutionStatus.PENDING;
+    private TradeExecutionStatus tradeExecutionStatus = TradeExecutionStatus.PENDING;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
+    private StockOrder stockOrder;
 }
