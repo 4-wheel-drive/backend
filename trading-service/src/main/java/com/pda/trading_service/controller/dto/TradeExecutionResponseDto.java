@@ -5,6 +5,7 @@ import java.util.List;
 
 public class TradeExecutionResponseDto {
     public record ReadTradeExecution(
+            Integer tradeExecutionCount,
             List<TradeExecutionDto> tradeExecutions
     ) {
     }
