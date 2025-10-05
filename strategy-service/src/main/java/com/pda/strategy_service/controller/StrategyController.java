@@ -33,4 +33,18 @@ public class StrategyController {
                         ResponseMessage.GET_STRATEGIES_SUCCESS.getMessage(),
                         readStrategies));
     }
+
+    //    @MemberOnly
+//    @GetMapping("/{strategyId}")
+//    public ResponseEntity<ApiResponse<ReadStrategy>> getStrategy(Long strategyId) {
+//        Long memberId = 1L;
+//        ReadStrategy readStrategy = strategyService.getMonoStrategy(strategyId, memberId);
+//
+//        return ResponseEntity
+//                .ok()
+//                .body(ApiResponse.success(
+//                        ResponseMessage.GET_STRATEGIES_SUCCESS.getCode(),
+//                        ResponseMessage.GET_STRATEGIES_SUCCESS.getMessage(),
+//                        ReadStrategy));
+//    }
 }

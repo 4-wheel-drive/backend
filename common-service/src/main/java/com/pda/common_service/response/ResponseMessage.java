@@ -27,7 +27,15 @@ public enum ResponseMessage {
     /**
      * strategy
      */
-    GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다.");;
+    GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다."),
+    GET_MONO_STRATEGY_SUCCESS("GET_MONO_STRATEGY_SUCCESS", "단일 조회 전략 조회를 성공했습니다."),
+    STRATEGY_NOT_FOUND("STRATEGY_NOT_FOUND", "존재하지 않는 전략입니다."),
+
+    /**
+     * trade
+     */
+    GET_EXECUTION_SUCCESS("GET_EXECUTION_SUCCESS", "체결 내역 가져오기를 성공했습니다.");
+
 
     private final String code;
     private final String message;
