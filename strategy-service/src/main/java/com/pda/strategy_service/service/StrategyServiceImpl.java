@@ -14,12 +14,12 @@ import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.domain.Strategy;
+import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
 import com.pda.strategy_service.repository.StrategyRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -59,12 +59,17 @@ public class StrategyServiceImpl implements StrategyService {
     public ReadStrategy getMonoStrategy(Long strategyId) {
         Strategy strategy = strategyRepository.findById(strategyId)
                 .orElseThrow(() -> new StrategyException(ResponseMessage.STRATEGY_NOT_FOUND));
-        System.out.println(strategy.getStrategyName());
         BigDecimal allCumulativeProfit = profitCalculator.allCumulativeProfit(strategy);
         BigDecimal weekCumulativeProfit = profitCalculator.weekCumulativeProfit(strategy);
         ProfitDto strategyProfit = new ProfitDto(allCumulativeProfit, weekCumulativeProfit);
         ProfitSeries periodSeries = profitCalculator.getAllPeriodSeries(strategy);
 
-        return new ReadStrategy(strategyProfit, periodSeries);
+        MemberStock memberStock = strategy.getMemberStock();
+        Stock stock = memberStock.getStock();
+
+        StockInfo stockInfo = stock.toDto();
+        SimpleStrategy simpleStrategy = strategy.toSimpleStrategyDto();
+
+        return new ReadStrategy(stockInfo, simpleStrategy, strategyProfit, periodSeries);
     }
 }

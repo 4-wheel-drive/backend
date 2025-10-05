@@ -1,5 +1,7 @@
 package com.pda.strategy_service.controller.dto;
 
+import com.pda.common_service.stock.dto.StockInfo;
+import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
 import com.pda.strategy_service.service.dto.ProfitPoint;
 import java.math.BigDecimal;
@@ -12,6 +14,8 @@ public class StrategyResponse {
     }
 
     public record ReadStrategy(
+            StockInfo stockInfo,
+            SimpleStrategy strategyInfo,
             ProfitDto strategyProfit,
             ProfitSeries profitSeries
     ) {

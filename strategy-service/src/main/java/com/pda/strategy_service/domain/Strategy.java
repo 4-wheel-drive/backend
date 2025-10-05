@@ -3,6 +3,7 @@ package com.pda.strategy_service.domain;
 import com.pda.common_service.BaseEntity;
 import com.pda.common_service.stock.MemberStock;
 import com.pda.common_service.stock.dto.StockInfo;
+import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,5 +54,9 @@ public class Strategy extends BaseEntity {
                 strategyProfitSummary.getStrategyProfitSummaryAvgBuyPrice(),
                 strategyProfitSummary.getStrategyProfitSummaryCurrentPrice()
         );
+    }
+
+    public SimpleStrategy toSimpleStrategyDto() {
+        return new SimpleStrategy(id, strategyName);
     }
 }

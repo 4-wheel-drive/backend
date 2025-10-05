@@ -38,14 +38,13 @@ public class StrategyController {
 
     @GetMapping("/{strategyId}")
     public ResponseEntity<ApiResponse<ReadStrategy>> getStrategy(@PathVariable Long strategyId) {
-        System.out.println("들어옴");
         ReadStrategy readStrategy = strategyService.getMonoStrategy(strategyId);
 
         return ResponseEntity
                 .ok()
                 .body(ApiResponse.success(
-                        ResponseMessage.GET_STRATEGIES_SUCCESS.getCode(),
-                        ResponseMessage.GET_STRATEGIES_SUCCESS.getMessage(),
+                        ResponseMessage.GET_MONO_STRATEGY_SUCCESS.getCode(),
+                        ResponseMessage.GET_MONO_STRATEGY_SUCCESS.getMessage(),
                         readStrategy));
     }
 }
