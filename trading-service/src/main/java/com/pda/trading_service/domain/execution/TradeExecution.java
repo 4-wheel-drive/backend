@@ -1,6 +1,7 @@
 package com.pda.trading_service.domain.execution;
 
 import com.pda.common_service.BaseEntity;
+import com.pda.trading_service.domain.execution.dto.TradeExecutionDto;
 import com.pda.trading_service.domain.order.StockOrder;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,4 +42,10 @@ public class TradeExecution extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
     private StockOrder stockOrder;
+
+    public TradeExecutionDto toDto() {
+        return new TradeExecutionDto(
+                id, tradeExecutionType, tradeExecutionQuantity, tradeExecutionPrice, getCreatedAt());
+    }
 }
+;
