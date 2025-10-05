@@ -6,10 +6,12 @@ import com.pda.common_service.authentication.MemberOnly;
 import com.pda.common_service.response.ApiResponse;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
+import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.service.StrategyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,17 +36,16 @@ public class StrategyController {
                         readStrategies));
     }
 
-    //    @MemberOnly
-//    @GetMapping("/{strategyId}")
-//    public ResponseEntity<ApiResponse<ReadStrategy>> getStrategy(Long strategyId) {
-//        Long memberId = 1L;
-//        ReadStrategy readStrategy = strategyService.getMonoStrategy(strategyId, memberId);
-//
-//        return ResponseEntity
-//                .ok()
-//                .body(ApiResponse.success(
-//                        ResponseMessage.GET_STRATEGIES_SUCCESS.getCode(),
-//                        ResponseMessage.GET_STRATEGIES_SUCCESS.getMessage(),
-//                        ReadStrategy));
-//    }
+    @GetMapping("/{strategyId}")
+    public ResponseEntity<ApiResponse<ReadStrategy>> getStrategy(@PathVariable Long strategyId) {
+        System.out.println("들어옴");
+        ReadStrategy readStrategy = strategyService.getMonoStrategy(strategyId);
+
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(
+                        ResponseMessage.GET_STRATEGIES_SUCCESS.getCode(),
+                        ResponseMessage.GET_STRATEGIES_SUCCESS.getMessage(),
+                        readStrategy));
+    }
 }
