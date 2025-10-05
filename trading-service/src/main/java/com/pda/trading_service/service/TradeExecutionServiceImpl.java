@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class TradeExecutionServiceImpl implements TradeExecutionService {
     private final StockOrderRepository stockOrderRepository;
     private final TradeExecutionRepository tradeExecutionRepository;
-    private final MemberStockRepository memberStockRepository;
 
     @Override
     public ReadTradeExecution getTradeExecution(Long memberId, Long strategyId) {
@@ -34,6 +33,6 @@ public class TradeExecutionServiceImpl implements TradeExecutionService {
             }
         }
         tradeExecutionList.sort((a, b) -> b.executionTime().compareTo(a.executionTime()));
-        return new TradeExecutionResponseDto.ReadTradeExecution(tradeExecutionList);
+        return new TradeExecutionResponseDto.ReadTradeExecution(tradeExecutionList.size(), tradeExecutionList);
     }
 }

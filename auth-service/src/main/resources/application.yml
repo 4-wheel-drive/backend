@@ -1,30 +1,25 @@
 spring:
-  application:
-    name: auth-service
   datasource:
-    url: jdbc:h2:file:~/userdb;AUTO_SERVER=TRUE   # 파일 기반 DB
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mariadb://127.0.0.1:3307/modular1
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: admin
+    password: admin1024
   h2:
     console:
       enabled: true
       path: /h2-console
   jpa:
     hibernate:
-      ddl-auto: create-drop         # 엔티티 기반 테이블 생성
+      ddl-auto: update
     show-sql: true
-    defer-datasource-initialization: true   # data.sql 실행 순서 보장
+    properties:
+      hibernate:
+        format_sql: true
   sql:
     init:
-      mode: always             # data.sql 실행
-
+      mode: always
 server:
-  port: 8081
-
-user:
-  feature-flag:
-    welcome-message: true
+  port: 8080
 
 jwt:
   access-expire-ms: 200000
