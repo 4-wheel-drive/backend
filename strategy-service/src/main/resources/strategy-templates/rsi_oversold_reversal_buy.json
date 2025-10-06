@@ -1,0 +1,34 @@
+{
+    "strategy_name": "rsi_oversold_reversal_buy",
+    "version": 1,
+    "owner_id": "user_123",
+    "meta": {
+        "universe": ["005930"],
+        "enabled": true
+    },
+    "buy": {
+        "node": {
+            "type": "GROUP",
+            "logic": "ALL",
+            "label": "BUY ROOT: RSI 30 상향 돌파 (과매도 반전)",
+            "children": [
+                {
+                    "type": "CROSS",
+                    "label": "RSI(14, 15m) CROSS UP 30",
+                    "direction": "UP",
+                    "left": {
+                        "kind": "INDICATOR",
+                        "name": "RSI",
+                        "args": { "period": 14 },
+                        "subfield": "value",
+                        "timeframe": "15m"
+                    },
+                    "right": {
+                        "kind": "CONSTANT",
+                        "constant": { "value": 30 }
+                    }
+                }
+            ]
+        }
+    }
+}

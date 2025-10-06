@@ -1,0 +1,34 @@
+{
+    "strategy_name": "ma_support_resistance_break_buy",
+    "version": 1,
+    "owner_id": "user_123",
+    "meta": {
+        "universe": ["005930"],
+        "enabled": true
+    },
+    "buy": {
+        "node": {
+            "type": "GROUP",
+            "logic": "ALL",
+            "label": "BUY ROOT: 주가가 EMA50을 상향 돌파",
+            "children": [
+                {
+                    "type": "CROSS",
+                    "label": "close(1d) CROSS UP EMA(50, 1d)",
+                    "direction": "UP",
+                    "left": {
+                        "kind": "PRICE",
+                        "field": "close",
+                        "timeframe": "1d"
+                    },
+                    "right": {
+                        "kind": "INDICATOR",
+                        "name": "EMA",
+                        "args": { "period": 50 },
+                        "timeframe": "1d"
+                    }
+                }
+            ]
+        }
+    }
+}
