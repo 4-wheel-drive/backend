@@ -4,6 +4,7 @@ package com.pda.common_service.handler;
 import com.pda.common_service.exception.AuthException;
 import com.pda.common_service.exception.DuplicatedException;
 import com.pda.common_service.exception.MemberException;
+import com.pda.common_service.exception.ResourceNotFound;
 import com.pda.common_service.exception.StrategyException;
 import com.pda.common_service.response.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -60,5 +61,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.failure("FORMAT-EXCEPTION", errorMessage));
+    }
+
+    @ExceptionHandler(ResourceNotFound.class)
+    public ResponseEntity<ApiResponse<String>> handleResourceNotFoundException(ResourceNotFound ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getCode(), ex.getMessage()));
     }
 }

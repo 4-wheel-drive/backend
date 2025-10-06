@@ -7,8 +7,10 @@ import java.util.Map;
 
 public interface StrategyTemplateService {
     
+    StrategyTemplate saveStrategyTemplate(Long strategyMetaId, Map<String, Object> strategyJson);
+
     StrategyTemplate saveStrategyTemplate(Map<String, Object> strategyJson);
-    
+
     List<StrategyTemplate> getAllStrategyTemplates();
     
     List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId);
@@ -18,10 +20,10 @@ public interface StrategyTemplateService {
     List<StrategyTemplate> searchStrategyTemplatesByName(String strategyName);
     
     void deleteStrategyTemplate(String strategyName, Integer version);
-    
+
     void initializeDefaultStrategyTemplates();
-    
+
     void forceReinitializeStrategyTemplates();
-    
+
     void updateStrategyTemplates();
 }

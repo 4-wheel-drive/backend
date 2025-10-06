@@ -3,7 +3,7 @@ package com.pda.strategy_service.service;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.domain.DailyStrategyProfit;
 import com.pda.strategy_service.domain.Strategy;
-import com.pda.strategy_service.repository.DailyStrategyProfitRepository;
+import com.pda.strategy_service.repository.jpa.DailyStrategyProfitRepository;
 import com.pda.strategy_service.service.dto.ProfitPoint;
 import java.math.BigDecimal;
 import java.math.RoundingMode;

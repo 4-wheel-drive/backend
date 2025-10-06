@@ -3,18 +3,20 @@ package com.pda.strategy_service.domain;
 import com.pda.common_service.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Getter
 public class StrategyProfitSummary extends BaseEntity {
     @Id
@@ -29,4 +31,11 @@ public class StrategyProfitSummary extends BaseEntity {
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal strategyProfitSummaryProfitRate;
+
+    public static StrategyProfitSummary create() {
+        return StrategyProfitSummary.builder()
+                .strategyProfitSummaryProfitRate(BigDecimal.ZERO)
+                .strategyProfitSummaryAvgBuyPrice(BigDecimal.ZERO)
+                .strategyProfitSummaryCurrentPrice(BigDecimal.ZERO).build();
+    }
 }

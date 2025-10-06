@@ -5,23 +5,53 @@ import com.pda.common_service.exception.StrategyTemplatesException;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.strategy_service.domain.mongodb.StrategyTemplate;
 import com.pda.strategy_service.repository.mongodb.StrategyTemplateRepository;
+import com.pda.strategy_service.service.StrategySummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class StrategyTemplateServiceImpl implements StrategyTemplateService {
-    
     private final StrategyTemplateRepository strategyTemplateRepository;
     private final StrategyTemplateFileLoader fileLoader;
-    private final ObjectMapper objectMapper;
-    
+    private final StrategySummaryService strategySummaryService;
+
+
+    @Override
+    @Transactional
+    public StrategyTemplate saveStrategyTemplate(Long strategyMetaId, Map<String, Object> strategyJson) {
+        try {
+            StrategyTemplate strategyTemplate = StrategyTemplate.builder()
+                    .strategyId(strategyMetaId)
+                    .strategyName((String) strategyJson.get("strategy_name"))
+                    .version((Integer) strategyJson.get("version"))
+                    .ownerId((String) strategyJson.get("owner_id"))
+                    .meta((Map<String, Object>) strategyJson.get("meta"))
+                    .buy((Map<String, Object>) strategyJson.get("buy"))
+                    .sell((Map<String, Object>) strategyJson.get("sell"))
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+
+            StrategyTemplate savedStrategyTemplate = strategyTemplateRepository.save(strategyTemplate);
+
+            String jsonString = new ObjectMapper().writeValueAsString(strategyJson);
+
+            strategySummaryService.generateSummaryAndSave(strategyMetaId, jsonString);
+
+            return savedStrategyTemplate;
+
+        } catch (Exception e) {
+            throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_SAVE_FAILED);
+        }
+    }
+
     @Override
     public StrategyTemplate saveStrategyTemplate(Map<String, Object> strategyJson) {
         try {
@@ -35,7 +65,7 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
-            
+
             return strategyTemplateRepository.save(strategyTemplate);
         } catch (Exception e) {
             throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_SAVE_FAILED);
@@ -67,16 +97,15 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
     public void deleteStrategyTemplate(String strategyName, Integer version) {
         strategyTemplateRepository.deleteByStrategyNameAndVersion(strategyName, version);
     }
-    
+
     @Override
     public void initializeDefaultStrategyTemplates() {
         try {
             List<Map<String, Object>> templates = fileLoader.loadAllStrategyTemplates();
-            
             if (templates.isEmpty()) {
                 return;
             }
-            
+
             for (Map<String, Object> template : templates) {
                 try {
                     saveStrategyTemplate(template);
@@ -84,23 +113,23 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                     throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_INITIALIZE_FAILED);
                 }
             }
-            
+
         } catch (Exception e) {
             throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_INITIALIZE_FAILED);
         }
     }
-    
+
     @Override
     public void forceReinitializeStrategyTemplates() {
         try {
             strategyTemplateRepository.deleteAll();
-            
+
             List<Map<String, Object>> templates = fileLoader.loadAllStrategyTemplates();
-            
+
             if (templates.isEmpty()) {
                 return;
             }
-            
+
             for (Map<String, Object> template : templates) {
                 try {
                     saveStrategyTemplate(template);
@@ -108,32 +137,32 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                     throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED);
                 }
             }
-            
+
         } catch (Exception e) {
             throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED);
         }
     }
-    
+
     @Override
     public void updateStrategyTemplates() {
         try {
             List<Map<String, Object>> fileTemplates = fileLoader.loadAllStrategyTemplates();
-            
+
             if (fileTemplates.isEmpty()) {
                 return;
             }
-            
+
             int updatedCount = 0;
             int createdCount = 0;
-            
+
             for (Map<String, Object> fileTemplate : fileTemplates) {
                 try {
                     String strategyName = (String) fileTemplate.get("strategy_name");
                     Integer version = (Integer) fileTemplate.get("version");
-                    
-                    Optional<StrategyTemplate> existingTemplate = 
+
+                    Optional<StrategyTemplate> existingTemplate =
                         strategyTemplateRepository.findByStrategyNameAndVersion(strategyName, version);
-                    
+
                     if (existingTemplate.isPresent()) {
                         StrategyTemplate updatedTemplate = StrategyTemplate.builder()
                                 .id(existingTemplate.get().getId())
@@ -146,20 +175,20 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                                 .createdAt(existingTemplate.get().getCreatedAt())
                                 .updatedAt(LocalDateTime.now())
                                 .build();
-                        
+
                         strategyTemplateRepository.save(updatedTemplate);
                         updatedCount++;
-                        
+
                     } else {
                         saveStrategyTemplate(fileTemplate);
                         createdCount++;
                     }
-                    
+
                 } catch (Exception e) {
                     throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_UPDATE_FAILED);
                 }
             }
-            
+
         } catch (Exception e) {
             throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_UPDATE_FAILED);
         }

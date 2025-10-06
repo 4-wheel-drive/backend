@@ -39,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseCookie signUp(AuthRequest.SignUp signUpRequest) {
+    public void signUp(AuthRequest.SignUp signUpRequest) {
         String hashedPw = BCrypt.hashpw(signUpRequest.memberPassword(), BCrypt.gensalt());
 
         Optional<Member> optionalMember = memberRepository.findByMemberId(signUpRequest.memberId());
@@ -51,9 +51,6 @@ public class AuthServiceImpl implements AuthService {
         Member member = Member.create(signUpRequest.memberId(), hashedPw, signUpRequest.memberName(),
                 signUpRequest.memberAccountNumber(), signUpRequest.memberAppKey(), signUpRequest.memberAppSecret());
 
-        Member savedMember = memberRepository.save(member);
-        String accessToken = tokenProvider.generateTokens(savedMember.getId().toString());
-
-        return TokenCookieManager.createCookie(accessToken);
+        memberRepository.save(member);
     }
 }

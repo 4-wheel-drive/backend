@@ -19,4 +19,6 @@ public interface StrategyTemplateRepository extends MongoRepository<StrategyTemp
     List<StrategyTemplate> findByStrategyNameContainingIgnoreCase(String strategyName);
     
     void deleteByStrategyNameAndVersion(String strategyName, Integer version);
+
+    StrategyTemplate findByStrategyId(Long strategyId);
 }
