@@ -1,0 +1,67 @@
+{
+    "strategy_name": "rsi_overbought_reversal_sell",
+    "version": 1,
+    "owner_id": "user_123",
+    "meta": {
+        "universe": ["005930"],
+        "enabled": true
+    },
+    "sell": {
+        "node": {
+            "type": "GROUP",
+            "logic": "ANY",
+            "label": "SELL ROOT: RSI 70 하향 돌파 OR 손익 관리",
+            "children": [
+                {
+                    "type": "CROSS",
+                    "label": "RSI(14, 15m) CROSS DOWN 70",
+                    "direction": "DOWN",
+                    "left": {
+                        "kind": "INDICATOR",
+                        "name": "RSI",
+                        "args": { "period": 14 },
+                        "subfield": "value",
+                        "timeframe": "15m"
+                    },
+                    "right": {
+                        "kind": "CONSTANT",
+                        "constant": { "value": 70 }
+                    }
+                },
+                {
+                    "type": "GROUP",
+                    "logic": "ANY",
+                    "label": "S: 손익 관리 조건",
+                    "children": [
+                        {
+                            "type": "COMPARE",
+                            "label": "S1: 손절 -3.0% 도달",
+                            "operator": "<=",
+                            "left": {
+                                "kind": "PROFIT_AND_LOSS",
+                                "profit_and_loss_field": "percent"
+                            },
+                            "right": {
+                                "kind": "CONSTANT",
+                                "constant": { "value": -3.0, "unit": "percent" }
+                            }
+                        },
+                        {
+                            "type": "COMPARE",
+                            "label": "S2: 익절 +7.0% 도달",
+                            "operator": ">=",
+                            "left": {
+                                "kind": "PROFIT_AND_LOSS",
+                                "profit_and_loss_field": "percent"
+                            },
+                            "right": {
+                                "kind": "CONSTANT",
+                                "constant": { "value": 7.0, "unit": "percent" }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

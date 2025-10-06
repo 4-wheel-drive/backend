@@ -23,5 +23,9 @@ spring:
         format_sql: true
         default_batch_fetch_size: 100
 
+  data:
+    mongodb:
+      uri: mongodb://admin:1234@localhost:27017/f1drivers?authSource=admin
+
 server:
   port: 8082

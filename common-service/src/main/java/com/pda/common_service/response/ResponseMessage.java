@@ -27,7 +27,18 @@ public enum ResponseMessage {
     /**
      * strategy
      */
-    GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다.");;
+    GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다."),
+
+    /**
+     * strategy templates
+     */
+    STRATEGY_TEMPLATE_SAVE_FAILED("STRATEGY-TEMPLATE-SAVE-FAILED", "전략 템플릿 저장에 실패했습니다."),
+    STRATEGY_TEMPLATE_LOAD_FAILED("STRATEGY-TEMPLATE-LOAD-FAILED", "전략 템플릿 로드에 실패했습니다."),
+    STRATEGY_TEMPLATE_INITIALIZE_FAILED("STRATEGY-TEMPLATE-INITIALIZE-FAILED", "전략 템플릿 초기화에 실패했습니다."),
+    STRATEGY_TEMPLATE_UPDATE_FAILED("STRATEGY-TEMPLATE-UPDATE-FAILED", "전략 템플릿 업데이트에 실패했습니다."),
+    STRATEGY_TEMPLATE_FILE_NOT_FOUND("STRATEGY-TEMPLATE-FILE-NOT-FOUND", "전략 템플릿 파일을 찾을 수 없습니다."),
+    STRATEGY_TEMPLATE_FILE_READ_FAILED("STRATEGY-TEMPLATE-FILE-READ-FAILED", "전략 템플릿 파일 읽기에 실패했습니다."),
+    STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED", "전략 템플릿 강제 재초기화에 실패했습니다.");
 
     private final String code;
     private final String message;

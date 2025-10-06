@@ -1,0 +1,35 @@
+{
+    "strategy_name": "bollinger_band_breakout_buy",
+    "version": 1,
+    "owner_id": "user_123",
+    "meta": {
+        "universe": ["005930"],
+        "enabled": true
+    },
+    "buy": {
+        "node": {
+            "type": "GROUP",
+            "logic": "ALL",
+            "label": "BUY ROOT: 볼린저 밴드 상단 돌파",
+            "children": [
+                {
+                    "type": "CROSS",
+                    "label": "A1: close(15m) CROSS UP BB.upper(20, 2, 15m)",
+                    "direction": "UP",
+                    "left": {
+                        "kind": "PRICE",
+                        "field": "close",
+                        "timeframe": "15m"
+                    },
+                    "right": {
+                        "kind": "INDICATOR",
+                        "name": "BOLLINGER_BANDS",
+                        "args": { "period": 20, "stddev": 2 },
+                        "subfield": "upper",
+                        "timeframe": "15m"
+                    }
+                }
+            ]
+        }
+    }
+}

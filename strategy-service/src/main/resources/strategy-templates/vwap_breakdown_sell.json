@@ -1,0 +1,68 @@
+{
+    "strategy_name": "vwap_breakdown_sell",
+    "version": 1,
+    "owner_id": "user_123",
+    "meta": {
+        "universe": ["005930"],
+        "enabled": true
+    },
+    "sell": {
+        "node": {
+            "type": "GROUP",
+            "logic": "ANY",
+            "label": "SELL ROOT: 주가 VWAP 하향 돌파 OR 손익 관리",
+            "children": [
+                {
+                    "type": "CROSS",
+                    "label": "close(15m) CROSS DOWN VWAP(15m)",
+                    "direction": "DOWN",
+                    "left": {
+                        "kind": "PRICE",
+                        "field": "close",
+                        "timeframe": "15m"
+                    },
+                    "right": {
+                        "kind": "INDICATOR",
+                        "name": "VWAP",
+                        "args": {},
+                        "subfield": "value",
+                        "timeframe": "15m"
+                    }
+                },
+                {
+                    "type": "GROUP",
+                    "logic": "ANY",
+                    "label": "S: 손익 관리 조건",
+                    "children": [
+                        {
+                            "type": "COMPARE",
+                            "label": "S1: 손절 -3.0% 도달",
+                            "operator": "<=",
+                            "left": {
+                                "kind": "PROFIT_AND_LOSS",
+                                "profit_and_loss_field": "percent"
+                            },
+                            "right": {
+                                "kind": "CONSTANT",
+                                "constant": { "value": -3.0, "unit": "percent" }
+                            }
+                        },
+                        {
+                            "type": "COMPARE",
+                            "label": "S2: 익절 +7.0% 도달",
+                            "operator": ">=",
+                            "left": {
+                                "kind": "PROFIT_AND_LOSS",
+                                "profit_and_loss_field": "percent"
+                            },
+                            "right": {
+                                "kind": "CONSTANT",
+                                "constant": { "value": 7.0, "unit": "percent" }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

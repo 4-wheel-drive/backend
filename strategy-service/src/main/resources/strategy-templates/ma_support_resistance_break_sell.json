@@ -1,0 +1,67 @@
+{
+    "strategy_name": "ma_support_resistance_break_sell",
+    "version": 1,
+    "owner_id": "user_123",
+    "meta": {
+        "universe": ["005930"],
+        "enabled": true
+    },
+    "sell": {
+        "node": {
+            "type": "GROUP",
+            "logic": "ANY",
+            "label": "SELL ROOT: 주가 EMA50 하향 이탈 OR 손익 관리",
+            "children": [
+                {
+                    "type": "CROSS",
+                    "label": "X1: close(1d) CROSS DOWN EMA(50, 1d)",
+                    "direction": "DOWN",
+                    "left": {
+                        "kind": "PRICE",
+                        "field": "close",
+                        "timeframe": "1d"
+                    },
+                    "right": {
+                        "kind": "INDICATOR",
+                        "name": "EMA",
+                        "args": { "period": 50 },
+                        "timeframe": "1d"
+                    }
+                },
+                {
+                    "type": "GROUP",
+                    "logic": "ANY",
+                    "label": "S: 손익 관리 조건",
+                    "children": [
+                        {
+                            "type": "COMPARE",
+                            "label": "S1: 손절 -5.0% 도달",
+                            "operator": "<=",
+                            "left": {
+                                "kind": "PROFIT_AND_LOSS",
+                                "profit_and_loss_field": "percent"
+                            },
+                            "right": {
+                                "kind": "CONSTANT",
+                                "constant": { "value": -5.0, "unit": "percent" }
+                            }
+                        },
+                        {
+                            "type": "COMPARE",
+                            "label": "S2: 익절 +15.0% 도달",
+                            "operator": ">=",
+                            "left": {
+                                "kind": "PROFIT_AND_LOSS",
+                                "profit_and_loss_field": "percent"
+                            },
+                            "right": {
+                                "kind": "CONSTANT",
+                                "constant": { "value": 15.0, "unit": "percent" }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
