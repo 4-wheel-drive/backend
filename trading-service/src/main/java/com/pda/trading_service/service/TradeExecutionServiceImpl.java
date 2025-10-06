@@ -1,6 +1,5 @@
 package com.pda.trading_service.service;
 
-import com.pda.common_service.stock.MemberStockRepository;
 import com.pda.trading_service.controller.dto.TradeExecutionResponseDto;
 import com.pda.trading_service.controller.dto.TradeExecutionResponseDto.ReadTradeExecution;
 import com.pda.trading_service.domain.execution.TradeExecution;

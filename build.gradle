@@ -81,9 +81,3 @@ project(":trading-service") {
 tasks.named('test') {
     useJUnitPlatform()
 }
-
-dependencies {
-    // ✅ 루트 모듈(H2 서버 띄우는 애플리케이션)을 위한 최소 의존성
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'com.h2database:h2'
-}

@@ -1,6 +1,9 @@
 package com.pda.strategy_service.controller;
 
+import com.pda.strategy_service.domain.Strategy;
+import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.mongodb.StrategyTemplate;
+import com.pda.strategy_service.service.StrategyService;
 import com.pda.strategy_service.service.mongodb.StrategyTemplateService;
 import com.pda.strategy_service.service.mongodb.StrategyTemplateFileLoader;
 import lombok.RequiredArgsConstructor;
@@ -14,42 +17,51 @@ import java.util.Map;
 @RequestMapping("/api/strategy-templates")
 @RequiredArgsConstructor
 public class StrategyTemplateController {
-    
+
     private final StrategyTemplateService strategyTemplateService;
     private final StrategyTemplateFileLoader fileLoader;
-    
+    private final StrategyService strategyService;
+
     @GetMapping
     public ResponseEntity<List<StrategyTemplate>> getAllStrategyTemplates() {
         List<StrategyTemplate> templates = strategyTemplateService.getAllStrategyTemplates();
         return ResponseEntity.ok(templates);
     }
-    
+
     @GetMapping("/owner/{ownerId}")
     public ResponseEntity<List<StrategyTemplate>> getStrategyTemplatesByOwner(@PathVariable String ownerId) {
         List<StrategyTemplate> templates = strategyTemplateService.getStrategyTemplatesByOwner(ownerId);
         return ResponseEntity.ok(templates);
     }
-    
+
     @GetMapping("/search")
     public ResponseEntity<List<StrategyTemplate>> searchStrategyTemplates(@RequestParam String name) {
         List<StrategyTemplate> templates = strategyTemplateService.searchStrategyTemplatesByName(name);
         return ResponseEntity.ok(templates);
     }
-    
+
     @PostMapping("/load-from-file/{strategyName}")
     public ResponseEntity<StrategyTemplate> loadStrategyTemplateFromFile(@PathVariable String strategyName) {
         Map<String, Object> templateData = fileLoader.loadStrategyTemplateByName(strategyName);
-        if (templateData != null) {
-            StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(templateData);
-            return ResponseEntity.ok(template);
-        } else {
+
+        if (templateData == null) {
             return ResponseEntity.notFound().build();
         }
+
+        // 전략 meta 저장
+        Map<String, Object> meta = (Map<String, Object>) templateData.get("meta");
+        List<String> universe = (List<String>) meta.get("universe");
+        String stockId = (universe != null && !universe.isEmpty()) ? universe.get(0) : null;
+        StrategyMetaDto strategyMeta = new StrategyMetaDto(stockId, strategyName);
+        Strategy strategy = strategyService.saveStrategy(1L, strategyMeta);
+
+        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(strategy.getId(), templateData);
+        return ResponseEntity.ok(template);
     }
-    
+
     @GetMapping("/{strategyName}/{version}")
     public ResponseEntity<StrategyTemplate> getStrategyTemplate(
-            @PathVariable String strategyName, 
+            @PathVariable String strategyName,
             @PathVariable Integer version) {
         StrategyTemplate template = strategyTemplateService.getStrategyTemplateByNameAndVersion(strategyName, version);
         if (template != null) {
@@ -58,47 +70,57 @@ public class StrategyTemplateController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @PostMapping
     public ResponseEntity<StrategyTemplate> saveStrategyTemplate(@RequestBody Map<String, Object> strategyJson) {
-        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(strategyJson);
+        String strategyName = (String) strategyJson.get("strategy_name");
+        Map<String, Object> meta = (Map<String, Object>) strategyJson.get("meta");
+        List<String> universe = (List<String>) meta.get("universe");
+        String stockId = (universe != null && !universe.isEmpty()) ? universe.get(0) : null;
+        System.out.println(stockId);
+        StrategyMetaDto strategyMeta = new StrategyMetaDto(stockId, strategyName);
+        Strategy strategy = strategyService.saveStrategy(1L, strategyMeta);
+        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(strategy.getId(), strategyJson);
+
         return ResponseEntity.ok(template);
     }
-    
+
     @DeleteMapping("/{strategyName}/{version}")
     public ResponseEntity<Void> deleteStrategyTemplate(
-            @PathVariable String strategyName, 
+            @PathVariable String strategyName,
             @PathVariable Integer version) {
         strategyTemplateService.deleteStrategyTemplate(strategyName, version);
         return ResponseEntity.ok().build();
     }
-    
+
     @GetMapping("/available-files")
     public ResponseEntity<List<String>> getAvailableStrategyTemplateFiles() {
         List<String> files = fileLoader.getAvailableStrategyTemplates();
         return ResponseEntity.ok(files);
     }
-    
+
     @PostMapping("/initialize")
     public ResponseEntity<String> initializeStrategyTemplates() {
         try {
             strategyTemplateService.initializeDefaultStrategyTemplates();
             return ResponseEntity.ok("Strategy templates initialized successfully");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to initialize strategy templates: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("Failed to initialize strategy templates: " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/force-reinitialize")
     public ResponseEntity<String> forceReinitializeStrategyTemplates() {
         try {
             strategyTemplateService.forceReinitializeStrategyTemplates();
             return ResponseEntity.ok("Strategy templates force reinitialized successfully");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to force reinitialize strategy templates: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("Failed to force reinitialize strategy templates: " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/update")
     public ResponseEntity<String> updateStrategyTemplates() {
         try {

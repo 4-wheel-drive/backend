@@ -1,10 +1,11 @@
 package com.pda.strategy_service.repository;
 
 import com.pda.common_service.stock.MemberStock;
+import com.pda.common_service.user.domain.Member;
 import com.pda.strategy_service.domain.Strategy;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StrategyRepository extends JpaRepository<Strategy, Long> {
-    List<Strategy> findAllByMemberStock(MemberStock memberStock);
+    List<Strategy> findAllByMember(Member member);
 }

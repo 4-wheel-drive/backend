@@ -10,7 +10,7 @@ spring:
       path: /h2-console
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -19,11 +19,11 @@ spring:
 
   data:
     mongodb:
-      uri:
-      
+      uri: mongodb+srv://pda_user:<password는 우리 프로젝트 공유 파일 참고>@modular1.l9vuztw.mongodb.net/?retryWrites=true&w=majority&appName=modular1
+      database: pda-db
   sql:
     init:
       mode: always
-      
+
 server:
   port: 8080

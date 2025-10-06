@@ -1,5 +1,6 @@
-package com.pda.common_service.stock;
+package com.pda.common_service.stock.repository;
 
+import com.pda.common_service.stock.MemberStock;
 import com.pda.common_service.user.domain.Member;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;

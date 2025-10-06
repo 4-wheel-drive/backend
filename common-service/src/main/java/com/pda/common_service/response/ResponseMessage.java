@@ -46,7 +46,12 @@ public enum ResponseMessage {
     /**
      * trade
      */
-    GET_EXECUTION_SUCCESS("GET_EXECUTION_SUCCESS", "체결 내역 가져오기를 성공했습니다.");
+    GET_EXECUTION_SUCCESS("GET_EXECUTION_SUCCESS", "체결 내역 가져오기를 성공했습니다."),
+
+    /**
+     * STOCK
+     */
+    STOCK_NOT_FOUND("STOCK_NOT_FOUND", "존재하지 않는 주식입니다");
 
     private final String code;
     private final String message;

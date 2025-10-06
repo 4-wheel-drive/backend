@@ -26,6 +26,8 @@ public class StrategyTemplate {
     private String strategyName;
     
     private Integer version;
+
+    private Long strategyId;
     
     @Field("owner_id")
     private String ownerId;
