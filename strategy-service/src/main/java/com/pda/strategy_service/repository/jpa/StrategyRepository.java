@@ -1,6 +1,5 @@
-package com.pda.strategy_service.repository;
+package com.pda.strategy_service.repository.jpa;
 
-import com.pda.common_service.stock.MemberStock;
 import com.pda.common_service.user.domain.Member;
 import com.pda.strategy_service.domain.Strategy;
 import java.util.List;

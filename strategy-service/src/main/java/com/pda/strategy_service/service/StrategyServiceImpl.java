@@ -1,5 +1,6 @@
 package com.pda.strategy_service.service;
 
+import com.pda.common_service.exception.AuthException;
 import com.pda.common_service.exception.MemberException;
 import com.pda.common_service.exception.ResourceNotFound;
 import com.pda.common_service.exception.StrategyException;
@@ -14,14 +15,20 @@ import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.domain.Strategy;
+import com.pda.strategy_service.domain.StrategySummary;
 import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
 import com.pda.strategy_service.domain.dto.StrategyMetaDto;
-import com.pda.strategy_service.repository.StrategyRepository;
+import com.pda.strategy_service.domain.dto.StrategySummaryDto;
+import com.pda.strategy_service.domain.mongodb.StrategyTemplate;
+import com.pda.strategy_service.repository.jpa.StrategyRepository;
+import com.pda.strategy_service.repository.jpa.StrategySummaryRepository;
+import com.pda.strategy_service.repository.mongodb.StrategyTemplateRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +39,8 @@ public class StrategyServiceImpl implements StrategyService {
     private final StrategyRepository strategyRepository;
     private final StockRepository stockRepository;
     private final ProfitCalculator profitCalculator;
+    private final StrategySummaryRepository strategySummaryRepository;
+    private final StrategyTemplateRepository strategyTemplateRepository;
 
     @Override
     public ReadStrategies getStrategies(Long memberId) {
@@ -56,20 +65,31 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public ReadStrategy getMonoStrategy(Long strategyId) {
+    public ReadStrategy getMonoStrategy(Long memberId, Long strategyId) {
         Strategy strategy = strategyRepository.findById(strategyId)
                 .orElseThrow(() -> new StrategyException(ResponseMessage.STRATEGY_NOT_FOUND));
+
+        if (!(Objects.equals(strategy.getMember().getId(), memberId))) {
+            throw new AuthException(ResponseMessage.PERMISSION_DENY);
+        }
+
+        StrategySummary strategySummary = strategySummaryRepository.findByStrategy(strategy);
+        StrategySummaryDto strategySummaryDto = strategySummary.toDto();
+
         BigDecimal allCumulativeProfit = profitCalculator.allCumulativeProfit(strategy);
         BigDecimal weekCumulativeProfit = profitCalculator.weekCumulativeProfit(strategy);
         ProfitDto strategyProfit = new ProfitDto(allCumulativeProfit, weekCumulativeProfit);
         ProfitSeries periodSeries = profitCalculator.getAllPeriodSeries(strategy);
+
+        StrategyTemplate strategyTemplate = strategyTemplateRepository.findByStrategyId(strategyId);
 
         Stock stock = strategy.getStock();
 
         StockInfo stockInfo = stock.toDto();
         SimpleStrategy simpleStrategy = strategy.toSimpleStrategyDto();
 
-        return new ReadStrategy(stockInfo, simpleStrategy, strategyProfit, periodSeries);
+        return new ReadStrategy(stockInfo, simpleStrategy, strategyProfit, strategyTemplate, periodSeries,
+                strategySummaryDto);
     }
 
     @Override

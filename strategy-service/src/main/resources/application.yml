@@ -19,7 +19,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb+srv://pda_user:<password는 우리 프로젝트 공유 파일 참고>@modular1.l9vuztw.mongodb.net/?retryWrites=true&w=majority&appName=modular1
+      uri: mongodb+srv://pda_user:<비번은프로젝트 보세용>@modular1.l9vuztw.mongodb.net/?retryWrites=true&w=majority&appName=modular1
       database: pda-db
   sql:
     init:
@@ -27,3 +27,8 @@ spring:
 
 server:
   port: 8080
+
+openai:
+  api-key: ${OPENAI_API_KEY}
+  model: gpt-4o-mini
+  temperature: 0.4

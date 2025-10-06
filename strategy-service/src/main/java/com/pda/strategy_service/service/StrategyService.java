@@ -7,6 +7,6 @@ import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 
 public interface StrategyService {
     ReadStrategies getStrategies(Long memberId);
-    ReadStrategy getMonoStrategy(Long strategyId);
+    ReadStrategy getMonoStrategy(Long memberId, Long strategyId);
     Strategy saveStrategy(Long memberId, StrategyMetaDto strategyMeta);
 }

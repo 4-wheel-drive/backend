@@ -3,29 +3,28 @@ package com.pda.strategy_service.service.mongodb;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pda.common_service.exception.StrategyTemplatesException;
 import com.pda.common_service.response.ResponseMessage;
-import com.pda.strategy_service.domain.Strategy;
-import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.mongodb.StrategyTemplate;
-import com.pda.strategy_service.repository.StrategyProfitSummaryRepository;
 import com.pda.strategy_service.repository.mongodb.StrategyTemplateRepository;
-import com.pda.strategy_service.service.StrategyService;
+import com.pda.strategy_service.service.StrategySummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class StrategyTemplateServiceImpl implements StrategyTemplateService {
     private final StrategyTemplateRepository strategyTemplateRepository;
     private final StrategyTemplateFileLoader fileLoader;
+    private final StrategySummaryService strategySummaryService;
 
 
     @Override
+    @Transactional
     public StrategyTemplate saveStrategyTemplate(Long strategyMetaId, Map<String, Object> strategyJson) {
         try {
             StrategyTemplate strategyTemplate = StrategyTemplate.builder()
@@ -39,8 +38,15 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
-            
-            return strategyTemplateRepository.save(strategyTemplate);
+
+            StrategyTemplate savedStrategyTemplate = strategyTemplateRepository.save(strategyTemplate);
+
+            String jsonString = new ObjectMapper().writeValueAsString(strategyJson);
+
+            strategySummaryService.generateSummaryAndSave(strategyMetaId, jsonString);
+
+            return savedStrategyTemplate;
+
         } catch (Exception e) {
             throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_SAVE_FAILED);
         }
@@ -96,7 +102,6 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
     public void initializeDefaultStrategyTemplates() {
         try {
             List<Map<String, Object>> templates = fileLoader.loadAllStrategyTemplates();
-
             if (templates.isEmpty()) {
                 return;
             }

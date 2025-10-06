@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/strategy-templates")
+@RequestMapping("/api/v1/strategy-templates")
 @RequiredArgsConstructor
 public class StrategyTemplateController {
 

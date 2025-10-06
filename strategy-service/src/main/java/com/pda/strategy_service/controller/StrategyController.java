@@ -38,7 +38,7 @@ public class StrategyController {
 
     @GetMapping("/{strategyId}")
     public ResponseEntity<ApiResponse<ReadStrategy>> getStrategy(@PathVariable Long strategyId) {
-        ReadStrategy readStrategy = strategyService.getMonoStrategy(strategyId);
+        ReadStrategy readStrategy = strategyService.getMonoStrategy(1L, strategyId);
 
         return ResponseEntity
                 .ok()

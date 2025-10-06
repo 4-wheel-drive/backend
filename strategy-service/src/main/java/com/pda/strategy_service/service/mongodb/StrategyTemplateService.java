@@ -8,6 +8,7 @@ import java.util.Map;
 public interface StrategyTemplateService {
     
     StrategyTemplate saveStrategyTemplate(Long strategyMetaId, Map<String, Object> strategyJson);
+
     StrategyTemplate saveStrategyTemplate(Map<String, Object> strategyJson);
 
     List<StrategyTemplate> getAllStrategyTemplates();

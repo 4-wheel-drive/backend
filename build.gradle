@@ -69,6 +69,7 @@ project(":strategy-service") {
     dependencies {
         implementation project(":common-service")
         implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        implementation 'com.openai:openai-java:4.1.0'
     }
 }
 
