@@ -42,11 +42,10 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Object>> signUp(
             @Valid @RequestBody AuthRequest.SignUp signUpRequest
     ) {
-        ResponseCookie responseCookie = authService.signUp(signUpRequest);
+        authService.signUp(signUpRequest);
 
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
                 .body(ApiResponse.success(
                         ResponseMessage.SIGNUP_SUCCESS.getCode(),
                         ResponseMessage.SIGNUP_SUCCESS.getMessage()
