@@ -1,10 +1,12 @@
 package com.pda.auth_service.service;
 
 import com.pda.common_service.exception.AuthException;
+import com.pda.common_service.exception.DuplicatedException;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.common_service.user.domain.Member;
 import com.pda.common_service.user.repository.MemberRepository;
 import com.pda.auth_service.controller.dto.AuthRequest;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.http.ResponseCookie;
@@ -19,7 +21,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseCookie login(String memberId, String password) {
-        Member member = memberRepository.findByMemberId(memberId).orElseThrow();
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new AuthException(ResponseMessage.LOGIN_FAIL));
+
         String findMemberId = member.getMemberId();
         String findPassword = member.getMemberPassword();
 
@@ -37,6 +41,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseCookie signUp(AuthRequest.SignUp signUpRequest) {
         String hashedPw = BCrypt.hashpw(signUpRequest.memberPassword(), BCrypt.gensalt());
+
+        Optional<Member> optionalMember = memberRepository.findByMemberId(signUpRequest.memberId());
+
+        if (optionalMember.isPresent()) {
+            throw new DuplicatedException(ResponseMessage.MEMBER_ALREADY_EXISTED);
+        }
+
         Member member = Member.create(signUpRequest.memberId(), hashedPw, signUpRequest.memberName(),
                 signUpRequest.memberAccountNumber(), signUpRequest.memberAppKey(), signUpRequest.memberAppSecret());
 

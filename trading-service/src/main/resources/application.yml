@@ -15,15 +15,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        default_batch_fetch_size: 100
-
-  data:
-    mongodb:
-      uri:
-      
   sql:
     init:
       mode: always
-      
 server:
-  port: 8080
+  port: 8081

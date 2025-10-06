@@ -12,6 +12,7 @@ public enum ResponseMessage {
      * member
      * */
     MEMBER_NOT_FOUND("MEMBER-NOT-FOUND", "존재하지 않는 유저입니다"),
+    MEMBER_ALREADY_EXISTED("MEMBER_ALREADY_EXISTED", "이미 존재하는 유저입니다"),
 
     /*
      * auth
@@ -28,6 +29,8 @@ public enum ResponseMessage {
      * strategy
      */
     GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다."),
+    GET_MONO_STRATEGY_SUCCESS("GET_MONO_STRATEGY_SUCCESS", "단일 조회 전략 조회를 성공했습니다."),
+    STRATEGY_NOT_FOUND("STRATEGY_NOT_FOUND", "존재하지 않는 전략입니다."),
 
     /**
      * strategy templates
@@ -38,7 +41,12 @@ public enum ResponseMessage {
     STRATEGY_TEMPLATE_UPDATE_FAILED("STRATEGY-TEMPLATE-UPDATE-FAILED", "전략 템플릿 업데이트에 실패했습니다."),
     STRATEGY_TEMPLATE_FILE_NOT_FOUND("STRATEGY-TEMPLATE-FILE-NOT-FOUND", "전략 템플릿 파일을 찾을 수 없습니다."),
     STRATEGY_TEMPLATE_FILE_READ_FAILED("STRATEGY-TEMPLATE-FILE-READ-FAILED", "전략 템플릿 파일 읽기에 실패했습니다."),
-    STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED", "전략 템플릿 강제 재초기화에 실패했습니다.");
+    STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED", "전략 템플릿 강제 재초기화에 실패했습니다."),
+
+    /**
+     * trade
+     */
+    GET_EXECUTION_SUCCESS("GET_EXECUTION_SUCCESS", "체결 내역 가져오기를 성공했습니다.");
 
     private final String code;
     private final String message;
