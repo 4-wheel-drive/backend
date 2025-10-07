@@ -70,7 +70,17 @@ public class StrategyTemplateController {
             return ResponseEntity.notFound().build();
         }
     }
-
+    
+    @GetMapping("/id/{_id}")
+    public ResponseEntity<StrategyTemplate> getStrategyTemplateById(@PathVariable String _id) {
+        StrategyTemplate template = strategyTemplateService.getStrategyTemplateById(_id);
+        if (template != null) {
+            return ResponseEntity.ok(template);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
     @PostMapping
     public ResponseEntity<StrategyTemplate> saveStrategyTemplate(@RequestBody Map<String, Object> strategyJson) {
         String strategyName = (String) strategyJson.get("strategy_name");

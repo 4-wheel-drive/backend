@@ -89,6 +89,11 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
     }
     
     @Override
+    public StrategyTemplate getStrategyTemplateById(String _id) {
+        return strategyTemplateRepository.findById(id).orElse(null);
+    }
+    
+    @Override
     public List<StrategyTemplate> searchStrategyTemplatesByName(String strategyName) {
         return strategyTemplateRepository.findByStrategyNameContainingIgnoreCase(strategyName);
     }
