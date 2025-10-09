@@ -90,7 +90,7 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
     
     @Override
     public StrategyTemplate getStrategyTemplateById(String _id) {
-        return strategyTemplateRepository.findById(id).orElse(null);
+        return strategyTemplateRepository.findById(_id).orElse(null);
     }
     
     @Override
