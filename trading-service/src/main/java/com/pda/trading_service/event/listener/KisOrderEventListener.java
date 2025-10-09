@@ -1,4 +1,4 @@
-package com.pda.trading_service.event.handler;
+package com.pda.trading_service.event.listener;
 
 import com.pda.common_service.exception.ResourceNotFound;
 import com.pda.common_service.repository.KisTokenReader;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class KisOrderEventHandler {
+public class KisOrderEventListener {
     private final KisOrderService kisOrderService;
     private final KisWebSocketClient kisWebSocketClient;
     private final StockOrderRepository stockOrderRepository;
@@ -32,7 +32,6 @@ public class KisOrderEventHandler {
     @Transactional
     public void handleOrderCreatedEvent(OrderCreatedEvent event) {
         OrderEventDto dto = event.getOrderDto();
-        System.out.println("hello");
         StockOrder order = stockOrderRepository.findById(dto.orderId())
                 .orElseThrow(() -> new ResourceNotFound(ResponseMessage.ORDER_NOT_FOUND));
 

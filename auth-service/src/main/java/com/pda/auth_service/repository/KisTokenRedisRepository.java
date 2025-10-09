@@ -1,7 +1,6 @@
 package com.pda.auth_service.repository;
 
 import com.pda.common_service.repository.KisTokenReader;
-import com.pda.common_service.repository.KisTokenWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
