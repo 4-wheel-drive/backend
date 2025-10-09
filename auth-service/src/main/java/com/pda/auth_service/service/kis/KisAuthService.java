@@ -22,7 +22,7 @@ public class KisAuthService {
     private static final long ACCESS_TOKEN_TTL = 24 * 60 * 60;
     private static final long APPROVAL_KEY_TTL = 6 * 60 * 60;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final KisTokenRedisRepository kisTokenRedisRepository;
 
     public KisTokenResponse saveMemberAccessToken(Long memberId, String appKey, String appSecret) {

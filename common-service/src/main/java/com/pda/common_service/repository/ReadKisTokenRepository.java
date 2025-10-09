@@ -2,8 +2,10 @@ package com.pda.common_service.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
+@Repository
 public class ReadKisTokenRepository implements KisTokenReader {
     private final StringRedisTemplate redisTemplate;
 

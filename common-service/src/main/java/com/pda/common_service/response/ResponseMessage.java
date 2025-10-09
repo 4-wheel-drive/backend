@@ -24,6 +24,8 @@ public enum ResponseMessage {
     LOGIN_SUCCESS("LOGIN-SUCCESS", "로그인을 성공했습니다."),
     SIGNUP_SUCCESS("SIGNUP-SUCCESS", "회원가입을 성공했습니다"),
     LOGIN_FAIL("LOGIN-FAIL", "로그인을 실패했습니다."),
+    ISSUE_KIS_APPROVAL_KEY_FAIL("ISSUE_APPROVAL_KEY_FAIL", "KIS 웹소켓 키 발급을 실패했습니다"),
+    ISSUE_KIS_ACCESS_TOKEN_FAIL("ISSUE_KIS_ACCESS_TOKEN_FAIL", "KIS 접근 토큰 발급을 실패했습니다."),
 
     /**
      * strategy
@@ -41,7 +43,8 @@ public enum ResponseMessage {
     STRATEGY_TEMPLATE_UPDATE_FAILED("STRATEGY-TEMPLATE-UPDATE-FAILED", "전략 템플릿 업데이트에 실패했습니다."),
     STRATEGY_TEMPLATE_FILE_NOT_FOUND("STRATEGY-TEMPLATE-FILE-NOT-FOUND", "전략 템플릿 파일을 찾을 수 없습니다."),
     STRATEGY_TEMPLATE_FILE_READ_FAILED("STRATEGY-TEMPLATE-FILE-READ-FAILED", "전략 템플릿 파일 읽기에 실패했습니다."),
-    STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED", "전략 템플릿 강제 재초기화에 실패했습니다."),
+    STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED",
+            "전략 템플릿 강제 재초기화에 실패했습니다."),
 
     /**
      * trade
@@ -51,7 +54,16 @@ public enum ResponseMessage {
     /**
      * STOCK
      */
-    STOCK_NOT_FOUND("STOCK_NOT_FOUND", "존재하지 않는 주식입니다");
+    STOCK_NOT_FOUND("STOCK_NOT_FOUND", "존재하지 않는 주식입니다"),
+
+    /**
+     * Order
+     */
+    ORDER_CREATE_SUCCESS("ORDER_CREATE_SUCCESS", "주문 생성 완료"),
+    ORDER_CREATE_FAIL("ORDER_CREATE_FAIL", "주문 생성 실패"),
+    DEPOSIT_DEFICIENT("DEPOSIT_DEFICIENT", "예수금이 부족합니다"),
+    STOCK_QUANTITY_DEFICIENT("STOCK_QUANTITY_DEFICIENT", "보유 주식이 부족합니다"),
+    ORDER_NOT_FOUND("ORDER_NOT_FOUND", "주문을 찾을 수 없습니다");
 
     private final String code;
     private final String message;

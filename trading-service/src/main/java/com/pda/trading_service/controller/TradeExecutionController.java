@@ -28,5 +28,5 @@ public class TradeExecutionController {
                         ResponseMessage.GET_EXECUTION_SUCCESS.getMessage(),
                         tradeExecutions));
     }
-
 }
+
