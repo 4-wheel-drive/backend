@@ -1,6 +1,6 @@
 package com.pda.auth_service.scheduler;
 
-import com.pda.auth_service.config.KisAdminConfig;
+import com.pda.common_service.config.KisAdminConfig;
 import com.pda.auth_service.service.kis.KisAuthService;
 import com.pda.auth_service.service.kis.dto.KisApprovalResponse;
 import com.pda.auth_service.service.kis.dto.KisTokenResponse;

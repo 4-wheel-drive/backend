@@ -1,4 +1,4 @@
-package com.pda.auth_service.config;
+package com.pda.common_service.config;
 
 import lombok.Getter;
 import lombok.Setter;
