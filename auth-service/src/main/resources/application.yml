@@ -18,6 +18,13 @@ spring:
   sql:
     init:
       mode: always
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 2000ms
+
 server:
   port: 8080
 
@@ -25,3 +32,7 @@ jwt:
   access-expire-ms: 200000
   secret: "asdfasfaslkfjvkasjflskjvfkdsjvfklsjavlksjavslkj vflskj vfklsj vfsdjkvfshnaivueiup"
   issuer: "hello"
+kis:
+  admin:
+    appkey: ${KIS_ADMIN_APPKEY}
+    appSecret: ${KIS_ADMIN_APPSECRET}

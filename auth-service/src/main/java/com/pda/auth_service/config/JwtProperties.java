@@ -1,4 +1,4 @@
-package com.pda.auth_service.common;
+package com.pda.auth_service.config;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

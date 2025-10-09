@@ -1,7 +1,7 @@
 package com.pda.auth_service.service;
 
 import com.pda.common_service.util.TimeUtil;
-import com.pda.auth_service.common.JwtProperties;
+import com.pda.auth_service.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;

@@ -1,4 +1,4 @@
-package com.pda.auth_service.common;
+package com.pda.auth_service.config;
 
 import java.time.Clock;
 import java.time.ZoneId;

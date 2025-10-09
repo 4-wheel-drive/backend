@@ -14,7 +14,6 @@ repositories {
     mavenCentral()
 }
 
-
 subprojects {
     group = 'com.pda-final-project'
     group = 'com.pda'
@@ -40,7 +39,6 @@ subprojects {
         testAnnotationProcessor 'org.projectlombok:lombok'
         compileOnly 'org.projectlombok:lombok'
         implementation 'org.springframework.boot:spring-boot-starter-aop'
-        runtimeOnly 'org.springframework.boot:spring-boot-starter-aop:3.5.6'
         implementation 'com.h2database:h2'
         runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 
@@ -62,6 +60,9 @@ project(":auth-service") {
 
         // bcrypt
         implementation 'org.mindrot:jbcrypt:0.4'
+
+        // redis
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     }
 }
 
@@ -75,6 +76,10 @@ project(":strategy-service") {
 
 project(":trading-service") {
     dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-websocket'
+        implementation 'org.springframework:spring-websocket'
+        implementation 'org.springframework:spring-messaging'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
         implementation project(":common-service")
     }
 }

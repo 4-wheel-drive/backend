@@ -3,7 +3,9 @@ package com.pda.common_service.handler;
 
 import com.pda.common_service.exception.AuthException;
 import com.pda.common_service.exception.DuplicatedException;
+import com.pda.common_service.exception.KisException;
 import com.pda.common_service.exception.MemberException;
+import com.pda.common_service.exception.OrderException;
 import com.pda.common_service.exception.ResourceNotFound;
 import com.pda.common_service.exception.StrategyException;
 import com.pda.common_service.response.ApiResponse;
@@ -67,6 +69,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleResourceNotFoundException(ResourceNotFound ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getCode(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(OrderException.class)
+    public ResponseEntity<ApiResponse<String>> handleOrderException(OrderException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.failure(ex.getCode(), ex.getMessage()));
     }
 }
