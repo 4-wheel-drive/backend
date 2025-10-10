@@ -36,12 +36,12 @@ public class OrderService {
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
         TradeSide tradeSide = TradeSide.fromString(dto.orderType());
-
-        if (tradeSide == TradeSide.BUY) {
-            validateBalance(member, dto);
-        } else if (tradeSide == TradeSide.SELL) {
-            validateSell(member, dto);
-        }
+//
+//        if (tradeSide == TradeSide.BUY) {
+////            validateBalance(member, dto);
+//        } else if (tradeSide == TradeSide.SELL) {
+//            validateSell(member, dto);
+//        }
 
         StockOrder order = StockOrder.createOrder(tradeSide, dto, null);
 
@@ -60,27 +60,27 @@ public class OrderService {
         eventPublisher.publishEvent(new OrderCreatedEvent(this, orderEventDto));
     }
 
-    private void validateBalance(Member member, OrderCreateReqDto orderCreateReqDto) {
-        KisBalanceResponse balance = kisBalanceService.getBalance(member);
-        BigDecimal availableBalance = new BigDecimal(
-                Optional.ofNullable(balance.summary().totalDepositAmount()).orElse("0")
-        );
-        BigDecimal requiredAmount = orderCreateReqDto.orderPrice()
-                .multiply(BigDecimal.valueOf(orderCreateReqDto.orderQuantity()));
-
-        if (availableBalance.compareTo(requiredAmount) < 0) {
-            throw new OrderException(ResponseMessage.DEPOSIT_DEFICIENT);
-        }
-    }
-
-    private void validateSell(Member member, OrderCreateReqDto orderCreateReqDto) {
-        KisBalanceResponse balance = kisBalanceService.getBalance(member);
-        Integer availableStocks = validateHoldingStocksQuantity(balance.balances(), orderCreateReqDto.stockCode());
-
-        if (availableStocks < orderCreateReqDto.orderQuantity()) {
-            throw new OrderException(ResponseMessage.STOCK_QUANTITY_DEFICIENT);
-        }
-    }
+//    private void validateBalance(Member member, OrderCreateReqDto orderCreateReqDto) {
+//        KisBalanceResponse balance = kisBalanceService.getBalance(member);
+//        BigDecimal availableBalance = new BigDecimal(
+//                Optional.ofNullable(balance.summary().totalDepositAmount()).orElse("0")
+//        );
+//        BigDecimal requiredAmount = orderCreateReqDto.orderPrice()
+//                .multiply(BigDecimal.valueOf(orderCreateReqDto.orderQuantity()));
+//
+//        if (availableBalance.compareTo(requiredAmount) < 0) {
+//            throw new OrderException(ResponseMessage.DEPOSIT_DEFICIENT);
+//        }
+//    }
+//
+//    private void validateSell(Member member, OrderCreateReqDto orderCreateReqDto) {
+//        KisBalanceResponse balance = kisBalanceService.getBalance(member);
+//        Integer availableStocks = validateHoldingStocksQuantity(balance.balances(), orderCreateReqDto.stockCode());
+//
+//        if (availableStocks < orderCreateReqDto.orderQuantity()) {
+//            throw new OrderException(ResponseMessage.STOCK_QUANTITY_DEFICIENT);
+//        }
+//    }
 
     private Integer validateHoldingStocksQuantity(List<BalanceItem> balances, String stockCode) {
         for (BalanceItem balanceItem : balances) {

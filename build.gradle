@@ -39,6 +39,8 @@ subprojects {
         testAnnotationProcessor 'org.projectlombok:lombok'
         compileOnly 'org.projectlombok:lombok'
         implementation 'org.springframework.boot:spring-boot-starter-aop'
+        implementation 'org.springframework.boot:spring-boot-starter-webflux'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
         implementation 'com.h2database:h2'
         runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 

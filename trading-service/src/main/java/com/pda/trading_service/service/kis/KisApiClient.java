@@ -2,98 +2,108 @@ package com.pda.trading_service.service.kis;
 
 import com.pda.trading_service.service.kis.dto.KisOrderResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class KisApiClient {
 
-    private final RestTemplate restTemplate;
+    private final WebClient kisWebClient;
 
     private static final String BASE_URL = "https://openapivts.koreainvestment.com:29443";
+    private static final String ORDER_PATH = "/uapi/domestic-stock/v1/trading/order-cash";
     private static final String PRODUCT_CODE = "01"; // 일반계좌
 
-    public KisOrderResponse sendBuyOrder(
-            String appSecret, String appKey,
+    /**
+     * 🇰🇷 모의투자 시장가 주문 공통 메서드
+     */
+    private Mono<KisOrderResponse> sendOrder(
+            String appSecret,
+            String appKey,
             String accountNumber,
-            String accessToken, String stockCode, int quantity, BigDecimal price) {
+            String accessToken,
+            String stockCode,
+            int quantity,
+            BigDecimal price,
+            String trId,
+            String orderType // BUY or SELL
+    ) {
+        String cano = accountNumber.substring(0, 8);
+        String prdtCd = accountNumber.substring(8);
 
-        String url = BASE_URL + "/uapi/domestic-stock/v1/trading/order-cash";
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("CANO", accountNumber);
-        body.put("ACNT_PRDT_CD", PRODUCT_CODE);
+        Map<String, String> body = new HashMap<>();
+        body.put("CANO", cano);
+        body.put("ACNT_PRDT_CD", prdtCd);
         body.put("PDNO", stockCode);
-        body.put("ORD_DVSN", "00"); // 00: 시장가
-        body.put("ORD_QTY", quantity);
-        body.put("ORD_UNPR", price.toPlainString());
+        body.put("ORD_DVSN", "01");     // ✅ 시장가
+        body.put("ORD_QTY", String.valueOf(quantity));
+        body.put("ORD_UNPR", "0");      // ✅ 시장가 주문은 0 고정
         body.put("KRX_FWDG_ORD_ORGNO", "");
         body.put("ALGO_NO", "");
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("authorization", "Bearer " + accessToken);
-        headers.set("appkey", appKey);
-        headers.set("appsecret", appSecret);
-        headers.set("tr_id", "VTTC0802U"); // 모의 매수
+        log.info("[KIS 모의투자 {} 요청]: {}", orderType, body);
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        ResponseEntity<KisOrderResponse> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                KisOrderResponse.class
-        );
-
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            return response.getBody();
-        } else {
-            throw new RuntimeException("모의투자 매수 주문 실패: " + response.getStatusCode());
-        }
+        return kisWebClient.post()
+                .uri(BASE_URL + ORDER_PATH)
+                .header("authorization", "Bearer " + accessToken)
+                .header("appkey", appKey)
+                .header("appsecret", appSecret)
+                .header("tr_id", trId)
+                .header("custtype", "P")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .retrieve()
+                .onStatus(status -> status.is5xxServerError(), clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    log.error("[KIS 서버오류 5xx] {}", errorBody);
+                                    return Mono.error(new RuntimeException("KIS 서버 오류: " + errorBody));
+                                })
+                )
+                .bodyToMono(KisOrderResponse.class)
+                .doOnNext(res -> log.info("[KIS 응답]: {}", res))
+                .doOnError(e -> log.error("[{}] 주문 실패: {}", orderType, e.getMessage()));
     }
 
-    public KisOrderResponse sendSellOrder(
-            String appSecret, String appKey,
+
+    /**
+     * ✅ 모의투자 매수 (시장가)
+     */
+    public Mono<KisOrderResponse> sendBuyOrder(
+            String appSecret,
+            String appKey,
             String accountNumber,
-            String accessToken, String stockCode, int quantity, BigDecimal price) {
+            String accessToken,
+            String stockCode,
+            int quantity,
+            BigDecimal price
+    ) {
+        return sendOrder(appSecret, appKey, accountNumber, accessToken, stockCode, quantity, price,
+                "VTTC0802U", "BUY");
+    }
 
-        String url = BASE_URL + "/uapi/domestic-stock/v1/trading/order-cash";
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("CANO", accountNumber);
-        body.put("ACNT_PRDT_CD", PRODUCT_CODE);
-        body.put("PDNO", stockCode);
-        body.put("ORD_DVSN", "00");
-        body.put("ORD_QTY", quantity);
-        body.put("ORD_UNPR", price.toPlainString());
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("authorization", "Bearer " + accessToken);
-        headers.set("appkey", appKey);
-        headers.set("appsecret", appSecret);
-        headers.set("tr_id", "VTTC0801U"); // 모의 매도
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-
-        ResponseEntity<KisOrderResponse> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                KisOrderResponse.class
-        );
-
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            return response.getBody();
-        } else {
-            throw new RuntimeException("모의투자 매도 주문 실패: " + response.getStatusCode());
-        }
+    /**
+     * ✅ 모의투자 매도 (시장가)
+     */
+    public Mono<KisOrderResponse> sendSellOrder(
+            String appSecret,
+            String appKey,
+            String accountNumber,
+            String accessToken,
+            String stockCode,
+            int quantity,
+            BigDecimal price
+    ) {
+        return sendOrder(appSecret, appKey, accountNumber, accessToken, stockCode, quantity, price,
+                "VTTC0801U", "SELL");
     }
 }
