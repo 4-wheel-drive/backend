@@ -90,7 +90,7 @@ public class DashBoardResponse {
 
     public record StrategyInfo(
             Long id,
-            String name
+            String strategyName
     ) {
     }
 
