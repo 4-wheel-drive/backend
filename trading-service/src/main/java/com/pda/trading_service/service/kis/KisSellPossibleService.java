@@ -1,22 +1,20 @@
 package com.pda.trading_service.service.kis;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import com.pda.trading_service.service.kis.dto.KisSellPossibleResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class KisSellPossibleService {
+    private static final String PATH = "/uapi/domestic-stock/v1/trading/inquire-psbl-sell";
+    private static final String TR_ID_VIRTUAL = "VTTC8908R";
 
-    private static final String BASE_URL = "https://openapivts.koreainvestment.com:29443";
-
-    private final RestTemplate restTemplate;
+    private final WebClient kisWebClient;
 
     public KisSellPossibleResponse inquirePossibleSell(
             String accessToken,
@@ -27,38 +25,44 @@ public class KisSellPossibleService {
             String pdno,
             String orderPrice
     ) {
+        log.info("[KIS 모의투자 매도가능조회 요청] CANO={}, PRDT_CD={}, PDNO={}, PRICE={}", cano, prdtCd, pdno, orderPrice);
+
         try {
-            String url = BASE_URL + "/uapi/domestic-stock/v1/trading/inquire-psbl-sell";
+            KisSellPossibleResponse response = kisWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(PATH)
+                            .queryParam("CANO", cano)
+                            .queryParam("ACNT_PRDT_CD", prdtCd)
+                            .queryParam("PDNO", pdno)
+                            .queryParam("ORD_UNPR", orderPrice)
+                            .queryParam("ORD_DVSN", "00")   // 00: 지정가
+                            .queryParam("CCLD_DVSN", "00")  // 00: 일반체결
+                            .build())
+                    .header("authorization", "Bearer " + accessToken)
+                    .header("appkey", appKey)
+                    .header("appsecret", appSecret)
+                    .header("tr_id", TR_ID_VIRTUAL)
+                    .header("custtype", "P")
+                    .retrieve()
+                    .bodyToMono(KisSellPossibleResponse.class)
+                    .doOnSuccess(res -> log.info("✅ [모의투자 매도가능조회 성공] 종목: {}, 수량: {}",
+                            pdno,
+                            res.output() != null ? res.output().orderPossibleQuantity() : "0"))
+                    .doOnError(WebClientResponseException.class, e ->
+                            log.error("[HTTP 오류] {}", e.getResponseBodyAsString()))
+                    .doOnError(e ->
+                            log.error("[예외 발생] {}", e.getMessage()))
+                    .block();
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("authorization", "Bearer " + accessToken);
-            headers.set("appkey", appKey);
-            headers.set("appsecret", appSecret);
-            headers.set("tr_id", "VTTC8908R"); // 모의투자 TR ID
-            headers.set("custtype", "P");
+            return response;
 
-            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
-                    .queryParam("CANO", cano)
-                    .queryParam("ACNT_PRDT_CD", prdtCd)
-                    .queryParam("PDNO", pdno)
-                    .queryParam("ORD_UNPR", orderPrice)
-                    .queryParam("ORD_DVSN", "00")
-                    .queryParam("CCLD_DVSN", "00");
-
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<KisSellPossibleResponse> response = restTemplate.exchange(
-                    builder.toUriString(),
-                    HttpMethod.GET,
-                    entity,
-                    KisSellPossibleResponse.class
-            );
-
-            KisSellPossibleResponse result = response.getBody();
-            return result;
-
+        } catch (WebClientResponseException e) {
+            log.error("🚨 [HTTP 예외 발생] 상태코드: {}, 메시지: {}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("KIS 매도가능조회 API 호출 실패", e);
+            log.error("💥 [매도가능조회 예외 발생] {}", e.getMessage(), e);
+            throw e;
         }
     }
 }

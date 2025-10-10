@@ -7,8 +7,8 @@ import com.pda.trading_service.domain.order.OrderStatus;
 import com.pda.trading_service.domain.order.StockOrder;
 import com.pda.trading_service.event.OrderCreatedEvent;
 import com.pda.trading_service.repository.StockOrderRepository;
-import com.pda.trading_service.service.kis.KisOrderService;
 import com.pda.trading_service.service.dto.OrderEventDto;
+import com.pda.trading_service.service.kis.KisOrderService;
 import com.pda.trading_service.service.kis.dto.KisOrderResponse;
 import com.pda.trading_service.websocket.KisWebSocketClient;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class KisOrderEventListener {
+
     private final KisOrderService kisOrderService;
     private final KisWebSocketClient kisWebSocketClient;
     private final StockOrderRepository stockOrderRepository;
@@ -41,28 +42,35 @@ public class KisOrderEventListener {
                 case SELL -> kisOrderService.orderSell(dto);
             };
 
-            if ("0".equals(response.responseBody().resultCode())) {
-                String orderNumber = response.responseBody().output().orderNumber();
+            if (response != null && response.isSuccess()) {
+                KisOrderResponse.Output output = response.getOutput();
+                String orderNumber = output.getOrderNumber();
 
+                log.info("[모의투자 주문 성공] 주문번호: {}, 시간: {}", orderNumber, output.getOrderTime());
+
+                // 주문 상태 및 주문번호 갱신
                 order.updateStatus(OrderStatus.CREATED);
                 order.updateTradeId(orderNumber);
                 stockOrderRepository.save(order);
 
+                // 체결 확인 WebSocket 구독 시작
                 String approvalKey = kisTokenReader.getAdminApprovalKey();
                 kisWebSocketClient.connect(
                         approvalKey,
                         "H0STCNI0",
                         orderNumber
                 );
-
-                log.info("[WebSocket] 주문번호 {} 체결 구독 시작", orderNumber);
-
+                log.info("📡 [WebSocket] 주문번호 {} 체결 구독 시작", orderNumber);
             } else {
                 order.updateStatus(OrderStatus.FAIL);
                 stockOrderRepository.save(order);
+
+                String result = (response != null) ? response.getResultCode() : "null";
+                log.warn("[모의투자 주문 실패] resultCode={}, orderId={}", result, order.getId());
             }
 
         } catch (Exception e) {
+            log.error("[모의투자 주문 중 예외 발생] {}", e.getMessage(), e);
             order.updateStatus(OrderStatus.FAIL);
             stockOrderRepository.save(order);
         }

@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class KisOrderService {
-
     private final KisApiClient kisApiClient;
     private final MemberRepository memberRepository;
     private final KisTokenReader kisTokenReader;
@@ -30,7 +29,7 @@ public class KisOrderService {
                 dto.stockCode(),
                 dto.quantity(),
                 dto.price()
-        );
+        ).block();
     }
 
     public KisOrderResponse orderSell(OrderEventDto dto) {
@@ -45,6 +44,6 @@ public class KisOrderService {
                 dto.stockCode(),
                 dto.quantity(),
                 dto.price()
-        );
+        ).block();
     }
 }
