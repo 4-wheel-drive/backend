@@ -1,6 +1,5 @@
 package com.pda.common_service.response;
 
-import com.pda.common_service.exception.AuthException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +54,16 @@ public enum ResponseMessage {
      * STOCK
      */
     STOCK_NOT_FOUND("STOCK_NOT_FOUND", "존재하지 않는 주식입니다"),
+
+    /**
+     * Dashboard
+     */
+    GET_RETURNS_SUCCESS("GET_RETURNS_SUCCESS", "계좌 수익률 조회에 성공했습니다."),
+    GET_PROFIT_RATE_RANKING_SUCCESS("GET_PROFIT_RATE_RANKING_SUCCESS", "수익률 랭킹 조회에 성공했습니다."),
+    GET_STOCKS_SUCCESS("GET_STOCKS_SUCCESS", "보유 종목 조회에 성공했습니다."),
+    GET_STOCKS_PROFIT_SUCCESS("GET_STOCKS_PROFIT_SUCCESS", "종목별 수익률 조회에 성공했습니다."),
+    GET_TRANSACTIONS_SUCCESS("GET_TRANSACTIONS_SUCCESS", "전체 거래 체결 내역 조회에 성공했습니다."),
+    GET_TRANSACTIONS_BY_STOCK_SUCCESS("GET_TRANSACTIONS_BY_STOCK_SUCCESS", "종목별 거래 체결 내역 조회에 성공했습니다."),
 
     /**
      * Order
