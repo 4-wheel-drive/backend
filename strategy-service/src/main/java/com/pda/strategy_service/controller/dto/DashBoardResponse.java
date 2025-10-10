@@ -73,6 +73,11 @@ public class DashBoardResponse {
     public record GetTransactions(
             String accountId,
             List<TransactionItem> items,
+            PageInfo pageInfo
+    ) {
+    }
+
+    public record PageInfo(
             Integer currentPage,
             Integer totalPages,
             Long totalElements,
