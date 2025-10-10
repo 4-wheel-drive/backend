@@ -15,6 +15,7 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.RankingItem;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.StockItem;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.StockProfitData;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactions;
+import com.pda.strategy_service.controller.dto.DashBoardResponse.PageInfo;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.StrategyInfo;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.TransactionItem;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactionsByStock;
@@ -271,13 +272,17 @@ public class DashBoardServiceImpl implements DashBoardService {
                 })
                 .toList();
 
-        return new GetTransactions(
-                member.getMemberAccountNumber(),
-                items,
+        PageInfo pageInfo = new PageInfo(
                 transactionPage.getNumber(),
                 transactionPage.getTotalPages(),
                 transactionPage.getTotalElements(),
                 transactionPage.getSize()
+        );
+
+        return new GetTransactions(
+                member.getMemberAccountNumber(),
+                items,
+                pageInfo
         );
     }
 
