@@ -4,6 +4,8 @@ import com.pda.common_service.user.domain.Member;
 import com.pda.strategy_service.domain.Transaction;
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +17,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
            "WHERE t.stockOrder.strategy.member = :member " +
            "ORDER BY t.executionTime DESC")
     List<Transaction> findAllByStockOrderStrategyMemberOrderByExecutionTimeDesc(@Param("member") Member member);
+    
+    // StockOrder를 통해 회원의 거래 조회 (페이징)
+    @Query("SELECT t FROM Transaction t " +
+           "WHERE t.stockOrder.strategy.member = :member " +
+           "ORDER BY t.executionTime DESC")
+    Page<Transaction> findAllByStockOrderStrategyMemberOrderByExecutionTimeDesc(@Param("member") Member member, Pageable pageable);
     
     // 특정 종목에 대한 회원의 거래 조회
     @Query("SELECT t FROM Transaction t " +

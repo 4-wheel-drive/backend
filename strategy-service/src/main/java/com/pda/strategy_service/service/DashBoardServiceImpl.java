@@ -28,12 +28,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -186,61 +187,73 @@ public class DashBoardServiceImpl implements DashBoardService {
     }
 
     @Override
-    public GetStockProfit getStockProfit(Long memberId, String stockCode) {
+    public GetStockProfit getStocksProfit(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        Strategy strategy = strategyRepository.findAllByMember(member).stream()
-                .filter(s -> s.getStock() != null && stockCode.equals(s.getStock().toDto().stockCode()))
-                .filter(s -> s.getStrategyProfitSummary() != null)
-                .findFirst()
-                .orElseThrow(() -> new StrategyException(ResponseMessage.STRATEGY_NOT_FOUND));
+        List<Strategy> strategies = strategyRepository.findAllByMember(member);
 
-        Stock stock = strategy.getStock();
-        var stockInfo = stock.toDto();
+        Map<String, Strategy> stockMap = strategies.stream()
+                .filter(s -> s.getStock() != null)
+                .filter(s -> s.getStrategyProfitSummary() != null)
+                .collect(Collectors.toMap(
+                        s -> s.getStock().toDto().stockCode(),
+                        s -> s,
+                        (existing, replacement) -> existing
+                ));
 
         LocalDate today = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        Integer totalQty = transactionRepository.calculateStockQuantityByMember(member, stockCode);
-        BigDecimal netInvestment = transactionRepository.calculateNetInvestmentByMember(member, stockCode);
-        BigDecimal currentPrice = strategy.getStrategyProfitSummary().getStrategyProfitSummaryCurrentPrice();
-        BigDecimal totalAmount = currentPrice.multiply(BigDecimal.valueOf(totalQty));
+        List<StockProfitData> stockDataList = new ArrayList<>();
+        
+        for (Strategy strategy : stockMap.values()) {
+            Stock stock = strategy.getStock();
+            var stockInfo = stock.toDto();
+            String stockCode = stockInfo.stockCode();
 
-        BigDecimal profitRate = netInvestment.compareTo(BigDecimal.ZERO) > 0
-                ? totalAmount.subtract(netInvestment)
-                        .divide(netInvestment, 4, java.math.RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+            Integer totalQty = transactionRepository.calculateStockQuantityByMember(member, stockCode);
+            BigDecimal netInvestment = transactionRepository.calculateNetInvestmentByMember(member, stockCode);
+            BigDecimal currentPrice = strategy.getStrategyProfitSummary().getStrategyProfitSummaryCurrentPrice();
+            BigDecimal totalAmount = currentPrice.multiply(BigDecimal.valueOf(totalQty));
 
-        BigDecimal avgBuyPrice = transactionRepository.calculateAverageBuyPriceByMember(member, stockCode);
+            BigDecimal profitRate = netInvestment.compareTo(BigDecimal.ZERO) > 0
+                    ? totalAmount.subtract(netInvestment)
+                            .divide(netInvestment, 4, java.math.RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
 
-        StockProfitData stockProfitData = new StockProfitData(
-                stockInfo.stockCode(),
-                stockInfo.stockName(),
-                totalQty,
-                avgBuyPrice.setScale(2, java.math.RoundingMode.HALF_UP),
-                totalAmount.setScale(2, java.math.RoundingMode.HALF_UP),
-                profitRate.setScale(2, java.math.RoundingMode.HALF_UP)
-        );
+            BigDecimal avgBuyPrice = transactionRepository.calculateAverageBuyPriceByMember(member, stockCode);
+
+            StockProfitData stockProfitData = new StockProfitData(
+                    stockInfo.stockCode(),
+                    stockInfo.stockName(),
+                    totalQty,
+                    avgBuyPrice.setScale(2, java.math.RoundingMode.HALF_UP),
+                    totalAmount.setScale(2, java.math.RoundingMode.HALF_UP),
+                    profitRate.setScale(2, java.math.RoundingMode.HALF_UP)
+            );
+            
+            stockDataList.add(stockProfitData);
+        }
 
         String asOf = today.format(formatter);
         return new GetStockProfit(
                 member.getMemberAccountNumber(),
                 asOf,
-                Arrays.asList(stockProfitData)
+                stockDataList
         );
     }
 
     @Override
-    public GetTransactions getTransactions(Long memberId) {
+    public GetTransactions getTransactions(Long memberId, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        List<Transaction> transactions = transactionRepository.findAllByStockOrderStrategyMemberOrderByExecutionTimeDesc(member);
+        Page<Transaction> transactionPage = transactionRepository.findAllByStockOrderStrategyMemberOrderByExecutionTimeDesc(member, pageable);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         
-        List<TransactionItem> items = transactions.stream()
+        List<TransactionItem> items = transactionPage.getContent().stream()
                 .map(transaction -> {
                     var stockInfo = transaction.getStock().toDto();
                     var strategy = transaction.getStockOrder().getStrategy();
@@ -258,7 +271,14 @@ public class DashBoardServiceImpl implements DashBoardService {
                 })
                 .toList();
 
-        return new GetTransactions(member.getMemberAccountNumber(), items);
+        return new GetTransactions(
+                member.getMemberAccountNumber(),
+                items,
+                transactionPage.getNumber(),
+                transactionPage.getTotalPages(),
+                transactionPage.getTotalElements(),
+                transactionPage.getSize()
+        );
     }
 
     @Override
