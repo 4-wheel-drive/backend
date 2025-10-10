@@ -71,9 +71,9 @@ public class StrategyTemplateController {
         }
     }
     
-    @GetMapping("/id/{_id}")
-    public ResponseEntity<StrategyTemplate> getStrategyTemplateById(@PathVariable String _id) {
-        StrategyTemplate template = strategyTemplateService.getStrategyTemplateById(_id);
+    @GetMapping("/id/{strategyId}")
+    public ResponseEntity<StrategyTemplate> getStrategyTemplateById(@PathVariable String strategyId) {
+        StrategyTemplate template = strategyTemplateService.getStrategyTemplateById(strategyId);
         if (template != null) {
             return ResponseEntity.ok(template);
         } else {

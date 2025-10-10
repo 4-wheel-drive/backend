@@ -38,9 +38,9 @@ class MongoDBStrategyClient:
         
         return None
     
-    def get_strategy_by_id(self, _id: str) -> Optional[Dict[str, Any]]:
+    def get_strategy_by_id(self, id: str) -> Optional[Dict[str, Any]]:
         try:
-            response = self.session.get(f"{self.base_url}/api/strategy-templates/{_id}")
+            response = self.session.get(f"{self.base_url}/api/strategy-templates/{id}")
             
             if response.status_code == 200:
                 strategy = response.json()

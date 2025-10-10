@@ -8,11 +8,6 @@ spring:
     username: admin
     password: admin1024
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      
   jpa:
     hibernate:
       ddl-auto: none
@@ -24,8 +19,9 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb+srv://pda_user:<비번은프로젝트 보세용>@modular1.l9vuztw.mongodb.net/?retryWrites=true&w=majority&appName=modular1
+      uri: mongodb+srv://pda_user:pda_user1234@modular1.l9vuztw.mongodb.net/?retryWrites=true&w=majority&appName=modular1
       database: pda-db
+
   sql:
     init:
       mode: always
@@ -34,6 +30,6 @@ server:
   port: 8081
 
 openai:
-  api-key: ${OPENAI_API_KEY}
+  api-key: ${OPENAI_API_KEY:}
   model: gpt-4o-mini
   temperature: 0.4
