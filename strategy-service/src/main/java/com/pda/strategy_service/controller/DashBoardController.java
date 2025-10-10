@@ -10,10 +10,13 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactions
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactionsByStock;
 import com.pda.strategy_service.service.DashBoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -68,26 +71,29 @@ public class DashBoardController {
     }
 
 //    @MemberOnly
-    @GetMapping("/stocks/{stockCode}/profit-rate")
-//    public ResponseEntity<ApiResponse<GetStockProfit>> getStockProfit(@Auth Accessor accessor, @PathVariable String stockCode) {
-    public ResponseEntity<ApiResponse<GetStockProfit>> getStockProfit(@PathVariable String stockCode) {
+    @GetMapping("/stocks/profit-rate")
+//    public ResponseEntity<ApiResponse<GetStockProfit>> getStocksProfit(@Auth Accessor accessor) {
+    public ResponseEntity<ApiResponse<GetStockProfit>> getStocksProfit() {
         Long memberId = 1L;
-        GetStockProfit stockProfit = dashBoardService.getStockProfit(memberId, stockCode);
+        GetStockProfit stocksProfit = dashBoardService.getStocksProfit(memberId);
 
         return ResponseEntity
                 .ok()
                 .body(ApiResponse.success(
                         ResponseMessage.GET_STOCKS_PROFIT_SUCCESS.getCode(),
                         ResponseMessage.GET_STOCKS_PROFIT_SUCCESS.getMessage(),
-                        stockProfit));
+                        stocksProfit));
     }
 
 //    @MemberOnly
     @GetMapping("/transactions")
-//    public ResponseEntity<ApiResponse<GetTransactions>> getTransactions(@Auth Accessor accessor) {
-    public ResponseEntity<ApiResponse<GetTransactions>> getTransactions() {
+//    public ResponseEntity<ApiResponse<GetTransactions>> getTransactions(@Auth Accessor accessor, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<ApiResponse<GetTransactions>> getTransactions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Long memberId = 1L;
-        GetTransactions transactions = dashBoardService.getTransactions(memberId);
+        Pageable pageable = PageRequest.of(page, size);
+        GetTransactions transactions = dashBoardService.getTransactions(memberId, pageable);
 
         return ResponseEntity
                 .ok()
