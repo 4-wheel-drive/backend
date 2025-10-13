@@ -57,7 +57,6 @@ public class KisOrderEventListener {
                 String approvalKey = kisTokenReader.getAdminApprovalKey();
                 kisWebSocketClient.connect(
                         approvalKey,
-                        "H0STCNI0",
                         orderNumber
                 );
                 log.info("📡 [WebSocket] 주문번호 {} 체결 구독 시작", orderNumber);
