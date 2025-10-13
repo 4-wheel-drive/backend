@@ -24,7 +24,8 @@ public class KisTokenScheduler {
 
     @PostConstruct
     public void init() {
-        refreshApprovalToken();
+        refreshAdminApprovalToken();
+        refreshUserApprovalToken();
         refreshKisTokens();
     }
 
@@ -57,7 +58,7 @@ public class KisTokenScheduler {
     }
 
     @Scheduled(fixedDelay = 6 * 60 * 60 * 1000)
-    public void refreshApprovalToken() {
+    public void refreshAdminApprovalToken() {
         log.info("KIS ApprovalKey Refresh Scheduler 시작");
         try {
             KisApprovalResponse response = kisAuthService.saveApprovalToken(
@@ -69,4 +70,29 @@ public class KisTokenScheduler {
             log.error("ApprovalKey 갱신 실패: {}", e.getMessage());
         }
     }
+
+    @Scheduled(fixedDelay = 12 * 60 * 60 * 1000)
+    public void refreshUserApprovalToken() {
+        log.info("KIS User ApprovalKey Refresh Scheduler 시작");
+        try {
+            List<Member> members = memberRepository.findAll();
+
+            for (Member member : members) {
+                try {
+                    if (member.getMemberAppKey() != null && member.getMemberAppSecret() != null) {
+
+                        kisAuthService.saveUserApprovalToken(member.getId(), member.getMemberAppKey(),
+                                member.getMemberAppSecret());
+                    }
+                } catch (Exception e) {
+                    log.error("회원 ID: {} ApprovalKey 갱신 실패: {}", member.getId(), e.getMessage());
+                }
+            }
+            log.info("KIS User ApprovalKey Refresh Scheduler 완료");
+
+        } catch (Exception e) {
+            log.error("KIS User ApprovalKey Scheduler 실행 중 오류 발생: {}", e.getMessage());
+        }
+    }
+
 }

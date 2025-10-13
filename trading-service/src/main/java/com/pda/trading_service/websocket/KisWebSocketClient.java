@@ -17,7 +17,7 @@ public class KisWebSocketClient {
 
     public void connect(String approvalKey, String trId, String orderNo) {
         try {
-            URI uri = URI.create("wss://openapivts.koreainvestment.com:29443/websocket");
+            URI uri = URI.create("ws://ops.koreainvestment.com:31000/websocket");
             StandardWebSocketClient client = new StandardWebSocketClient();
 
             CompletableFuture<WebSocketSession> sessionFuture = client.execute(
