@@ -13,4 +13,6 @@ public interface StrategyService {
     ReadStrategy getMonoStrategy(Long memberId, Long strategyId);
     Strategy saveStrategyMeta(Long memberId, StrategyMetaDto strategyMeta);
     CustomStrategy saveStrategy(Long strategyMetaId, Map<String, Object> strategyJson);
+    void deleteStrategyById(Long strategyId, Long memberId);
+    Strategy findStrategyById(Long strategyId);
 }

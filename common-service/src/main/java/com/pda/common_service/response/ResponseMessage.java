@@ -1,5 +1,6 @@
 package com.pda.common_service.response;
 
+import com.pda.common_service.exception.StrategyException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,7 @@ public enum ResponseMessage {
     STRATEGY_NOT_FOUND("STRATEGY_NOT_FOUND", "존재하지 않는 전략입니다."),
     STRATEGY_SAVE_FAILED("STRATEGY-SAVE-FAILED", "전략 저장에 실패했습니다."),
     STRATEGY_SAVE_SUCCESS("STRATEGY-SAVE-SUCCESS", "전략 저장에 성공했습니다."),
+    STRATEGY_DELETE_SUCCESS("STRATEGY_DELETE_SUCCESS", "전략 삭제를 성공했습니다."),
     
 
 
@@ -78,6 +80,7 @@ public enum ResponseMessage {
     DEPOSIT_DEFICIENT("DEPOSIT_DEFICIENT", "예수금이 부족합니다"),
     STOCK_QUANTITY_DEFICIENT("STOCK_QUANTITY_DEFICIENT", "보유 주식이 부족합니다"),
     ORDER_NOT_FOUND("ORDER_NOT_FOUND", "주문을 찾을 수 없습니다");
+
 
     private final String code;
     private final String message;
