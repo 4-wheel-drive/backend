@@ -68,12 +68,4 @@ public class StockOrder extends BaseEntity {
     public void updateTradeId(String tradeId) {
         this.tradeId = tradeId;
     }
-
-    public void markFailed() {
-        this.orderStatus = OrderStatus.FAIL;
-    }
-
-    public void markCancelled() {
-        this.orderStatus = OrderStatus.CANCELLED;
-    }
 }

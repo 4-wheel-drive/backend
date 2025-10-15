@@ -1,20 +1,19 @@
 {
     "strategy_name": "vwap_breakout_buy",
     "version": 1,
-    "owner_id": "user_123",
     "meta": {
-        "universe": ["005930"],
+        "universe": [""],
         "enabled": true
     },
     "buy": {
         "node": {
             "type": "GROUP",
             "logic": "ALL",
-            "label": "BUY ROOT: 주가 VWAP 상향 돌파",
+            "label": "all",
             "children": [
                 {
                     "type": "CROSS",
-                    "label": "close(15m) CROSS UP VWAP(15m)",
+                    "label": "vwapCross",
                     "direction": "UP",
                     "left": {
                         "kind": "PRICE",

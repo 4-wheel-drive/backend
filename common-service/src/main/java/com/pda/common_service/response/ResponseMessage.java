@@ -32,6 +32,10 @@ public enum ResponseMessage {
     GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다."),
     GET_MONO_STRATEGY_SUCCESS("GET_MONO_STRATEGY_SUCCESS", "단일 조회 전략 조회를 성공했습니다."),
     STRATEGY_NOT_FOUND("STRATEGY_NOT_FOUND", "존재하지 않는 전략입니다."),
+    STRATEGY_SAVE_FAILED("STRATEGY-SAVE-FAILED", "전략 저장에 실패했습니다."),
+    STRATEGY_SAVE_SUCCESS("STRATEGY-SAVE-SUCCESS", "전략 저장에 성공했습니다."),
+    
+
 
     /**
      * strategy templates
@@ -44,6 +48,7 @@ public enum ResponseMessage {
     STRATEGY_TEMPLATE_FILE_READ_FAILED("STRATEGY-TEMPLATE-FILE-READ-FAILED", "전략 템플릿 파일 읽기에 실패했습니다."),
     STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED",
             "전략 템플릿 강제 재초기화에 실패했습니다."),
+
 
     /**
      * trade

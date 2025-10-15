@@ -1,31 +1,35 @@
 {
     "strategy_name": "ema_golden_cross_buy",
     "version": 1,
-    "owner_id": "user_123",
     "meta": {
-        "universe": ["005930"],
+        "universe": [""],
         "enabled": true
     },
     "buy": {
+        "orderQuantity" : 0,
         "node": {
             "type": "GROUP",
             "logic": "ALL",
-            "label": "BUY ROOT: 골든크로스 발생 (EMA20 ↑ EMA60)",
+            "label": "all",
             "children": [
                 {
                     "type": "CROSS",
-                    "label": "EMA(20, 1d) CROSS UP EMA(60, 1d)",
+                    "label": "emaCross",
                     "direction": "UP",
                     "left": {
                         "kind": "INDICATOR",
                         "name": "EMA",
-                        "args": { "period": 20 },
+                        "args": {
+                            "period": 20
+                        },
                         "timeframe": "1d"
                     },
                     "right": {
                         "kind": "INDICATOR",
                         "name": "EMA",
-                        "args": { "period": 60 },
+                        "args": {
+                            "period": 60
+                        },
                         "timeframe": "1d"
                     }
                 }

@@ -52,20 +52,6 @@ public class KisOrderEventListener {
                 order.updateStatus(OrderStatus.CREATED);
                 order.updateTradeId(orderNumber);
                 stockOrderRepository.save(order);
-
-                // 체결 확인 WebSocket 구독 시작
-                String approvalKey = kisTokenReader.getAdminApprovalKey();
-                kisWebSocketClient.connect(
-                        approvalKey,
-                        orderNumber
-                );
-                log.info("📡 [WebSocket] 주문번호 {} 체결 구독 시작", orderNumber);
-            } else {
-                order.updateStatus(OrderStatus.FAIL);
-                stockOrderRepository.save(order);
-
-                String result = (response != null) ? response.getResultCode() : "null";
-                log.warn("[모의투자 주문 실패] resultCode={}, orderId={}", result, order.getId());
             }
 
         } catch (Exception e) {

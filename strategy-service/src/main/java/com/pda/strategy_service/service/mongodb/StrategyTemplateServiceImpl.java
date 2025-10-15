@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,43 +21,12 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
     private final StrategyTemplateFileLoader fileLoader;
     private final StrategySummaryService strategySummaryService;
 
-
-    @Override
-    @Transactional
-    public StrategyTemplate saveStrategyTemplate(Long strategyMetaId, Map<String, Object> strategyJson) {
-        try {
-            StrategyTemplate strategyTemplate = StrategyTemplate.builder()
-                    .strategyId(strategyMetaId)
-                    .strategyName((String) strategyJson.get("strategy_name"))
-                    .version((Integer) strategyJson.get("version"))
-                    .ownerId((String) strategyJson.get("owner_id"))
-                    .meta((Map<String, Object>) strategyJson.get("meta"))
-                    .buy((Map<String, Object>) strategyJson.get("buy"))
-                    .sell((Map<String, Object>) strategyJson.get("sell"))
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
-
-            StrategyTemplate savedStrategyTemplate = strategyTemplateRepository.save(strategyTemplate);
-
-            String jsonString = new ObjectMapper().writeValueAsString(strategyJson);
-
-            strategySummaryService.generateSummaryAndSave(strategyMetaId, jsonString);
-
-            return savedStrategyTemplate;
-
-        } catch (Exception e) {
-            throw new StrategyTemplatesException(ResponseMessage.STRATEGY_TEMPLATE_SAVE_FAILED);
-        }
-    }
-
     @Override
     public StrategyTemplate saveStrategyTemplate(Map<String, Object> strategyJson) {
         try {
             StrategyTemplate strategyTemplate = StrategyTemplate.builder()
                     .strategyName((String) strategyJson.get("strategy_name"))
                     .version((Integer) strategyJson.get("version"))
-                    .ownerId((String) strategyJson.get("owner_id"))
                     .meta((Map<String, Object>) strategyJson.get("meta"))
                     .buy((Map<String, Object>) strategyJson.get("buy"))
                     .sell((Map<String, Object>) strategyJson.get("sell"))
@@ -77,10 +45,10 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
         return strategyTemplateRepository.findAll();
     }
     
-    @Override
-    public List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId) {
-        return strategyTemplateRepository.findByOwnerId(ownerId);
-    }
+//    @Override
+//    public List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId) {
+//        return strategyTemplateRepository.findByOwnerId(ownerId);
+//    }
     
     @Override
     public StrategyTemplate getStrategyTemplateByNameAndVersion(String strategyName, Integer version) {
@@ -173,7 +141,6 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                                 .id(existingTemplate.get().getId())
                                 .strategyName(strategyName)
                                 .version(version)
-                                .ownerId((String) fileTemplate.get("owner_id"))
                                 .meta((Map<String, Object>) fileTemplate.get("meta"))
                                 .buy((Map<String, Object>) fileTemplate.get("buy"))
                                 .sell((Map<String, Object>) fileTemplate.get("sell"))

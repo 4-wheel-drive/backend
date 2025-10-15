@@ -6,14 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 public interface StrategyTemplateService {
-    
-    StrategyTemplate saveStrategyTemplate(Long strategyMetaId, Map<String, Object> strategyJson);
 
     StrategyTemplate saveStrategyTemplate(Map<String, Object> strategyJson);
 
     List<StrategyTemplate> getAllStrategyTemplates();
     
-    List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId);
+//    List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId);
     
     StrategyTemplate getStrategyTemplateByNameAndVersion(String strategyName, Integer version);
     

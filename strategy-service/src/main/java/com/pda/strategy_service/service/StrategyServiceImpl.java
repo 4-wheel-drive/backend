@@ -1,9 +1,11 @@
 package com.pda.strategy_service.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pda.common_service.exception.AuthException;
 import com.pda.common_service.exception.MemberException;
 import com.pda.common_service.exception.ResourceNotFound;
 import com.pda.common_service.exception.StrategyException;
+import com.pda.common_service.exception.StrategyTemplatesException;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.common_service.stock.Stock;
 import com.pda.common_service.stock.dto.StockInfo;
@@ -20,14 +22,17 @@ import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
 import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.dto.StrategySummaryDto;
-import com.pda.strategy_service.domain.mongodb.StrategyTemplate;
+import com.pda.strategy_service.domain.mongodb.CustomStrategy;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.StrategySummaryRepository;
+import com.pda.strategy_service.repository.mongodb.CustomStrategyRepository;
 import com.pda.strategy_service.repository.mongodb.StrategyTemplateRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,7 +44,9 @@ public class StrategyServiceImpl implements StrategyService {
     private final StrategyRepository strategyRepository;
     private final StockRepository stockRepository;
     private final ProfitCalculator profitCalculator;
+    private final StrategySummaryService strategySummaryService;
     private final StrategySummaryRepository strategySummaryRepository;
+    private final CustomStrategyRepository customStrategyRepository;
     private final StrategyTemplateRepository strategyTemplateRepository;
 
     @Override
@@ -81,20 +88,20 @@ public class StrategyServiceImpl implements StrategyService {
         ProfitDto strategyProfit = new ProfitDto(allCumulativeProfit, weekCumulativeProfit);
         ProfitSeries periodSeries = profitCalculator.getAllPeriodSeries(strategy);
 
-        StrategyTemplate strategyTemplate = strategyTemplateRepository.findByStrategyId(strategyId);
+        CustomStrategy customStrategy = customStrategyRepository.findByStrategyId(strategyId);
 
         Stock stock = strategy.getStock();
 
         StockInfo stockInfo = stock.toDto();
         SimpleStrategy simpleStrategy = strategy.toSimpleStrategyDto();
 
-        return new ReadStrategy(stockInfo, simpleStrategy, strategyProfit, strategyTemplate, periodSeries,
+        return new ReadStrategy(stockInfo, simpleStrategy, strategyProfit, customStrategy, periodSeries,
                 strategySummaryDto);
     }
 
     @Override
     @Transactional
-    public Strategy saveStrategy(Long memberId, StrategyMetaDto strategyMeta) {
+    public Strategy saveStrategyMeta(Long memberId, StrategyMetaDto strategyMeta) {
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
@@ -105,4 +112,33 @@ public class StrategyServiceImpl implements StrategyService {
 
         return strategyRepository.save(strategy);
     }
+
+    @Override
+    @Transactional
+    public CustomStrategy saveStrategy(Long strategyMetaId, Map<String, Object> strategyJson) {
+        try {
+            CustomStrategy customStrategy = CustomStrategy.builder()
+                    .strategyId(strategyMetaId)
+                    .strategyName((String) strategyJson.get("strategy_name"))
+                    .version((Integer) strategyJson.get("version"))
+                    .meta((Map<String, Object>) strategyJson.get("meta"))
+                    .buy((Map<String, Object>) strategyJson.get("buy"))
+                    .sell((Map<String, Object>) strategyJson.get("sell"))
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+
+            CustomStrategy savedCustomStrategy = customStrategyRepository.save(customStrategy);
+
+            String jsonString = new ObjectMapper().writeValueAsString(strategyJson);
+
+            strategySummaryService.generateSummaryAndSave(strategyMetaId, jsonString);
+
+            return savedCustomStrategy;
+
+        } catch (Exception e) {
+            throw new StrategyTemplatesException(ResponseMessage.STRATEGY_SAVE_FAILED);
+        }
+    }
+
 }
