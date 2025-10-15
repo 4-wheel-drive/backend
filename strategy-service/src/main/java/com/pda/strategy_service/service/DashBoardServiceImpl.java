@@ -22,6 +22,7 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactions
 import com.pda.strategy_service.controller.dto.DashBoardResponse.TransactionByStockItem;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.domain.Strategy;
+import com.pda.strategy_service.domain.StrategyExistedStatus;
 import com.pda.strategy_service.domain.Transaction;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.TransactionRepository;
@@ -51,7 +52,8 @@ public class DashBoardServiceImpl implements DashBoardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        List<Strategy> strategies = strategyRepository.findAllByMember(member);
+        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatus(member,
+                StrategyExistedStatus.EXISTED);
 
         ProfitSeries profitSeries = profitCalculator.getAllPeriodSeriesForAccount(strategies);
 
@@ -71,7 +73,8 @@ public class DashBoardServiceImpl implements DashBoardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        List<Strategy> strategies = strategyRepository.findAllByMember(member);
+        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatus(member,
+                StrategyExistedStatus.EXISTED);
 
         Map<String, Strategy> stockMap = strategies.stream()
                 .filter(s -> s.getStock() != null)
@@ -90,14 +93,15 @@ public class DashBoardServiceImpl implements DashBoardService {
 
                     Integer totalQty = transactionRepository.calculateStockQuantityByMember(member, stockCode);
                     BigDecimal netInvestment = transactionRepository.calculateNetInvestmentByMember(member, stockCode);
-                    BigDecimal currentPrice = strategy.getStrategyProfitSummary().getStrategyProfitSummaryCurrentPrice();
+                    BigDecimal currentPrice = strategy.getStrategyProfitSummary()
+                            .getStrategyProfitSummaryCurrentPrice();
                     BigDecimal marketValue = currentPrice.multiply(BigDecimal.valueOf(totalQty));
-                    
+
                     BigDecimal profitRate = netInvestment.compareTo(BigDecimal.ZERO) > 0
                             ? marketValue.subtract(netInvestment)
-                                    .divide(netInvestment, 2, java.math.RoundingMode.HALF_UP)
+                            .divide(netInvestment, 2, java.math.RoundingMode.HALF_UP)
                             : BigDecimal.ZERO;
-                    
+
                     BigDecimal pnl = marketValue.subtract(netInvestment);
 
                     return new RankingItem(
@@ -138,7 +142,8 @@ public class DashBoardServiceImpl implements DashBoardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        List<Strategy> strategies = strategyRepository.findAllByMember(member);
+        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatus(member,
+                StrategyExistedStatus.EXISTED);
 
         Map<String, Strategy> stockMap = strategies.stream()
                 .filter(s -> s.getStock() != null)
@@ -192,7 +197,8 @@ public class DashBoardServiceImpl implements DashBoardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        List<Strategy> strategies = strategyRepository.findAllByMember(member);
+        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatus(member,
+                StrategyExistedStatus.EXISTED);
 
         Map<String, Strategy> stockMap = strategies.stream()
                 .filter(s -> s.getStock() != null)
@@ -207,7 +213,7 @@ public class DashBoardServiceImpl implements DashBoardService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<StockProfitData> stockDataList = new ArrayList<>();
-        
+
         for (Strategy strategy : stockMap.values()) {
             Stock stock = strategy.getStock();
             var stockInfo = stock.toDto();
@@ -220,7 +226,7 @@ public class DashBoardServiceImpl implements DashBoardService {
 
             BigDecimal profitRate = netInvestment.compareTo(BigDecimal.ZERO) > 0
                     ? totalAmount.subtract(netInvestment)
-                            .divide(netInvestment, 4, java.math.RoundingMode.HALF_UP)
+                    .divide(netInvestment, 4, java.math.RoundingMode.HALF_UP)
                     : BigDecimal.ZERO;
 
             BigDecimal avgBuyPrice = transactionRepository.calculateAverageBuyPriceByMember(member, stockCode);
@@ -233,7 +239,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                     totalAmount.setScale(2, java.math.RoundingMode.HALF_UP),
                     profitRate.setScale(2, java.math.RoundingMode.HALF_UP)
             );
-            
+
             stockDataList.add(stockProfitData);
         }
 
@@ -250,15 +256,16 @@ public class DashBoardServiceImpl implements DashBoardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        Page<Transaction> transactionPage = transactionRepository.findAllByStockOrderStrategyMemberOrderByExecutionTimeDesc(member, pageable);
+        Page<Transaction> transactionPage = transactionRepository.findAllByStockOrderStrategyMemberOrderByExecutionTimeDesc(
+                member, pageable);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        
+
         List<TransactionItem> items = transactionPage.getContent().stream()
                 .map(transaction -> {
                     var stockInfo = transaction.getStock().toDto();
                     var strategy = transaction.getStockOrder().getStrategy();
-                    
+
                     return new TransactionItem(
                             "tr" + transaction.getId(),
                             transaction.getExecutionTime().format(formatter),
@@ -291,7 +298,8 @@ public class DashBoardServiceImpl implements DashBoardService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
 
-        List<Transaction> transactions = transactionRepository.findAllByMemberAndStockCodeOrderByExecutionTimeDesc(member, stockCode);
+        List<Transaction> transactions = transactionRepository.findAllByMemberAndStockCodeOrderByExecutionTimeDesc(
+                member, stockCode);
 
         if (transactions.isEmpty()) {
             throw new StrategyException(ResponseMessage.STOCK_NOT_FOUND);
@@ -300,14 +308,15 @@ public class DashBoardServiceImpl implements DashBoardService {
         var stockInfo = transactions.get(0).getStock().toDto();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        
+
         List<TransactionByStockItem> items = transactions.stream()
                 .map(transaction -> {
                     var strategy = transaction.getStockOrder().getStrategy();
                     BigDecimal price = transaction.getTradeExecutionPrice().setScale(2, java.math.RoundingMode.HALF_UP);
                     Integer qty = transaction.getTradeExecutionQuantity();
-                    BigDecimal amount = price.multiply(BigDecimal.valueOf(qty)).setScale(2, java.math.RoundingMode.HALF_UP);
-                    
+                    BigDecimal amount = price.multiply(BigDecimal.valueOf(qty))
+                            .setScale(2, java.math.RoundingMode.HALF_UP);
+
                     return new TransactionByStockItem(
                             "tr" + transaction.getId(),
                             transaction.getExecutionTime().format(formatter),

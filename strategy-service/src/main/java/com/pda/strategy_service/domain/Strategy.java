@@ -66,6 +66,20 @@ public class Strategy extends BaseEntity {
                 .build();
     }
 
+    public void update(
+            Stock stock,
+            String strategyName,
+            StrategyActivatedStatus strategyActivatedStatus,
+            StrategyExistedStatus strategyExistedStatus,
+            StrategyProfitSummary strategyProfitSummary
+    ) {
+        this.stock = stock;
+        this.strategyName = strategyName;
+        this.strategyActivatedStatus = strategyActivatedStatus;
+        this.strategyExistedStatus = strategyExistedStatus;
+        this.strategyProfitSummary = strategyProfitSummary;
+    }
+
     public StrategyDto toDto(StockInfo stockInfo, BigDecimal profitAmount) {
         return new StrategyDto(
                 id,

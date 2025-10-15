@@ -6,6 +6,7 @@
         "enabled": true
     },
     "buy": {
+        "orderQuantity" : 0,
         "node": {
             "type": "GROUP",
             "logic": "ALL",
