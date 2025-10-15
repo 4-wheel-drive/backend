@@ -27,7 +27,6 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
             StrategyTemplate strategyTemplate = StrategyTemplate.builder()
                     .strategyName((String) strategyJson.get("strategy_name"))
                     .version((Integer) strategyJson.get("version"))
-                    .ownerId((String) strategyJson.get("owner_id"))
                     .meta((Map<String, Object>) strategyJson.get("meta"))
                     .buy((Map<String, Object>) strategyJson.get("buy"))
                     .sell((Map<String, Object>) strategyJson.get("sell"))
@@ -46,10 +45,10 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
         return strategyTemplateRepository.findAll();
     }
     
-    @Override
-    public List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId) {
-        return strategyTemplateRepository.findByOwnerId(ownerId);
-    }
+//    @Override
+//    public List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId) {
+//        return strategyTemplateRepository.findByOwnerId(ownerId);
+//    }
     
     @Override
     public StrategyTemplate getStrategyTemplateByNameAndVersion(String strategyName, Integer version) {
@@ -142,7 +141,6 @@ public class StrategyTemplateServiceImpl implements StrategyTemplateService {
                                 .id(existingTemplate.get().getId())
                                 .strategyName(strategyName)
                                 .version(version)
-                                .ownerId((String) fileTemplate.get("owner_id"))
                                 .meta((Map<String, Object>) fileTemplate.get("meta"))
                                 .buy((Map<String, Object>) fileTemplate.get("buy"))
                                 .sell((Map<String, Object>) fileTemplate.get("sell"))

@@ -11,7 +11,7 @@ public interface StrategyTemplateService {
 
     List<StrategyTemplate> getAllStrategyTemplates();
     
-    List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId);
+//    List<StrategyTemplate> getStrategyTemplatesByOwner(String ownerId);
     
     StrategyTemplate getStrategyTemplateByNameAndVersion(String strategyName, Integer version);
     

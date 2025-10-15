@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface StrategyTemplateRepository extends MongoRepository<StrategyTemplate, String> {
     
-    List<StrategyTemplate> findByOwnerId(String ownerId);
+//    List<StrategyTemplate> findByOwnerId(String ownerId);
     
     List<StrategyTemplate> findByStrategyName(String strategyName);
     

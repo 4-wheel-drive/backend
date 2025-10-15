@@ -27,9 +27,6 @@ public class CustomStrategy {
 
     private Long strategyId;
 
-    @Field("owner_id")
-    private String ownerId;
-
     private Map<String, Object> meta;
 
     private Map<String, Object> buy;

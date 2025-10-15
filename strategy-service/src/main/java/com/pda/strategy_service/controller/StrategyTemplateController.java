@@ -28,11 +28,11 @@ public class StrategyTemplateController {
         return ResponseEntity.ok(templates);
     }
 
-    @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<List<StrategyTemplate>> getStrategyTemplatesByOwner(@PathVariable String ownerId) {
-        List<StrategyTemplate> templates = strategyTemplateService.getStrategyTemplatesByOwner(ownerId);
-        return ResponseEntity.ok(templates);
-    }
+//    @GetMapping("/owner/{ownerId}")
+//    public ResponseEntity<List<StrategyTemplate>> getStrategyTemplatesByOwner(@PathVariable String ownerId) {
+//        List<StrategyTemplate> templates = strategyTemplateService.getStrategyTemplatesByOwner(ownerId);
+//        return ResponseEntity.ok(templates);
+//    }
 
     @GetMapping("/search")
     public ResponseEntity<List<StrategyTemplate>> searchStrategyTemplates(@RequestParam String name) {

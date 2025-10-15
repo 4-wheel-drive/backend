@@ -17,7 +17,6 @@ import java.util.Map;
 @AllArgsConstructor
 @Document(collection = "strategy_templates")
 public class StrategyTemplate {
-
     @Id
     private String id;
 
@@ -25,9 +24,6 @@ public class StrategyTemplate {
     private String strategyName;
 
     private Integer version;
-
-    @Field("owner_id")
-    private String ownerId;
 
     private Map<String, Object> meta;
 

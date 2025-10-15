@@ -121,7 +121,6 @@ public class StrategyServiceImpl implements StrategyService {
                     .strategyId(strategyMetaId)
                     .strategyName((String) strategyJson.get("strategy_name"))
                     .version((Integer) strategyJson.get("version"))
-                    .ownerId((String) strategyJson.get("owner_id"))
                     .meta((Map<String, Object>) strategyJson.get("meta"))
                     .buy((Map<String, Object>) strategyJson.get("buy"))
                     .sell((Map<String, Object>) strategyJson.get("sell"))
