@@ -20,5 +20,4 @@ public interface StrategyTemplateRepository extends MongoRepository<StrategyTemp
     
     void deleteByStrategyNameAndVersion(String strategyName, Integer version);
 
-    StrategyTemplate findByStrategyId(Long strategyId);
 }

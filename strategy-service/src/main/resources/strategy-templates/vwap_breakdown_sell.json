@@ -1,20 +1,20 @@
 {
     "strategy_name": "vwap_breakdown_sell",
     "version": 1,
-    "owner_id": "user_123",
     "meta": {
-        "universe": ["005930"],
+        "universe": [""],
         "enabled": true
     },
     "sell": {
+        "orderQuantity" : 0,
         "node": {
             "type": "GROUP",
             "logic": "ANY",
-            "label": "SELL ROOT: 주가 VWAP 하향 돌파 OR 손익 관리",
+            "label": "any",
             "children": [
                 {
                     "type": "CROSS",
-                    "label": "close(15m) CROSS DOWN VWAP(15m)",
+                    "label": "vwapCross",
                     "direction": "DOWN",
                     "left": {
                         "kind": "PRICE",
@@ -32,11 +32,11 @@
                 {
                     "type": "GROUP",
                     "logic": "ANY",
-                    "label": "S: 손익 관리 조건",
+                    "label": "any",
                     "children": [
                         {
                             "type": "COMPARE",
-                            "label": "S1: 손절 -3.0% 도달",
+                            "label": "exitWithLoss",
                             "operator": "<=",
                             "left": {
                                 "kind": "PROFIT_AND_LOSS",
@@ -49,7 +49,7 @@
                         },
                         {
                             "type": "COMPARE",
-                            "label": "S2: 익절 +7.0% 도달",
+                            "label": "exitWithProfit",
                             "operator": ">=",
                             "left": {
                                 "kind": "PROFIT_AND_LOSS",

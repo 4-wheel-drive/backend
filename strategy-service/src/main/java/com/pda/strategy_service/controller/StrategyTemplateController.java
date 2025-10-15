@@ -53,9 +53,7 @@ public class StrategyTemplateController {
         List<String> universe = (List<String>) meta.get("universe");
         String stockId = (universe != null && !universe.isEmpty()) ? universe.get(0) : null;
         StrategyMetaDto strategyMeta = new StrategyMetaDto(stockId, strategyName);
-        Strategy strategy = strategyService.saveStrategy(1L, strategyMeta);
-
-        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(strategy.getId(), templateData);
+        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(templateData);
         return ResponseEntity.ok(template);
     }
 
@@ -80,17 +78,15 @@ public class StrategyTemplateController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @PostMapping
     public ResponseEntity<StrategyTemplate> saveStrategyTemplate(@RequestBody Map<String, Object> strategyJson) {
         String strategyName = (String) strategyJson.get("strategy_name");
         Map<String, Object> meta = (Map<String, Object>) strategyJson.get("meta");
         List<String> universe = (List<String>) meta.get("universe");
         String stockId = (universe != null && !universe.isEmpty()) ? universe.get(0) : null;
-        System.out.println(stockId);
         StrategyMetaDto strategyMeta = new StrategyMetaDto(stockId, strategyName);
-        Strategy strategy = strategyService.saveStrategy(1L, strategyMeta);
-        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(strategy.getId(), strategyJson);
+        StrategyTemplate template = strategyTemplateService.saveStrategyTemplate(strategyJson);
 
         return ResponseEntity.ok(template);
     }

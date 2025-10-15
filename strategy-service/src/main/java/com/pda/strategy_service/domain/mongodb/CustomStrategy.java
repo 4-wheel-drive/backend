@@ -1,5 +1,8 @@
 package com.pda.strategy_service.domain.mongodb;
 
+
+import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,16 +11,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.time.LocalDateTime;
-import java.util.Map;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "strategy_templates")
-public class StrategyTemplate {
-
+@Document(collection = "custom_strategy")
+public class CustomStrategy {
     @Id
     private String id;
 
@@ -25,6 +24,8 @@ public class StrategyTemplate {
     private String strategyName;
 
     private Integer version;
+
+    private Long strategyId;
 
     @Field("owner_id")
     private String ownerId;
