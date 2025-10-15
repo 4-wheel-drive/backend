@@ -34,5 +34,8 @@ jwt:
   issuer: "hello"
 kis:
   admin:
-    appkey: ${KIS_ADMIN_APPKEY}
-    appSecret: ${KIS_ADMIN_APPSECRET}
+    appkey: PS2NHUhlEcq2kctpGPPPuqkkDSOpAWPJV4gI
+    appSecret: MjbbLWxrlwhTn7+K2FnlWoVsmxMv/APKHmQ0Kr8sQvHIAGZ7UNrN+LOVrY8plPj6aCgdN8xIY1YTFyF+ALo0DsWu1qA+DVHUeL8lmOPW996jB/Fmnxm2DV+s29d0d1nSLLn+cCTDd6uGqEAMOSDe8d57MRDB/dY3h7K6SR5Gl2mUHDYaGBA=
+
+    
+

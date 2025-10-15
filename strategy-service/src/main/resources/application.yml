@@ -33,3 +33,5 @@ openai:
   api-key: ${OPENAI_API_KEY:}
   model: gpt-4o-mini
   temperature: 0.4
+
+  
