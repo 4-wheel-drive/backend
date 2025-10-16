@@ -12,14 +12,16 @@ import java.util.concurrent.TimeUnit;
 public class KisTokenRedisRepository implements KisTokenReader, KisTokenWriter {
     private final StringRedisTemplate redisTemplate;
 
-    private static final String ACCESS_TOKEN_KEY_FORMAT = "kis:user:%s:access-token";
-    private static final String ADMIN_APPROVAL_KEY = "kis:admin:approval-key";
+    private static final String USER_TOKEN_KEY = "kis:user:%s:access-token";
     private static final String USER_APPROVAL_KEY = "kis:user:%s:approval-key";
+
+    private static final String ADMIN_APPROVAL_KEY = "kis:admin:approval-key";
+    private static final String ADMIN_ACCESS_KEY = "kis:admin:access-token";
 
     @Override
     public void saveAccessToken(Long memberId, String token, long ttlSeconds) {
         redisTemplate.opsForValue().set(
-                String.format(ACCESS_TOKEN_KEY_FORMAT, memberId),
+                String.format(USER_TOKEN_KEY, memberId),
                 token,
                 ttlSeconds,
                 TimeUnit.SECONDS
@@ -28,7 +30,7 @@ public class KisTokenRedisRepository implements KisTokenReader, KisTokenWriter {
 
     @Override
     public String getMemberAccessToken(Long memberId) {
-        return redisTemplate.opsForValue().get(String.format(ACCESS_TOKEN_KEY_FORMAT, memberId));
+        return redisTemplate.opsForValue().get(String.format(USER_TOKEN_KEY, memberId));
     }
 
     @Override
@@ -54,5 +56,14 @@ public class KisTokenRedisRepository implements KisTokenReader, KisTokenWriter {
     @Override
     public String getUserApprovalKey(Long memberId) {
         return redisTemplate.opsForValue().get(String.format(USER_APPROVAL_KEY, memberId));
+    }
+
+    public void saveAdminAccessToken(String token, long ttlSeconds) {
+        redisTemplate.opsForValue().set(
+                ADMIN_ACCESS_KEY,
+                token,
+                ttlSeconds,
+                TimeUnit.SECONDS
+        );
     }
 }
