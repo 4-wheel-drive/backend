@@ -62,6 +62,10 @@ public enum ResponseMessage {
      * STOCK
      */
     STOCK_NOT_FOUND("STOCK_NOT_FOUND", "존재하지 않는 주식입니다"),
+    GET_ALL_STOCKS_SUCCESS("GET_ALL_STOCKS_SUCCESS", "종목 전체 조회에 성공했습니다."),
+    ALL_STOCK_FETCH_FAILED("ALL_STOCKS_FETCH_FAILED", "종목 전체 조회에 실패했습니다."),
+    GET_MY_STOCKS_SUCCESS("GET_MY_STOCKS_SUCCESS", "내 종목 조회에 성공했습니다."),
+    MY_STOCKS_FETCH_FAILED("MY_STOCKS_FETCH_FAILED", "내 종목 조회에 실패했습니다."),
 
     /**
      * Dashboard
