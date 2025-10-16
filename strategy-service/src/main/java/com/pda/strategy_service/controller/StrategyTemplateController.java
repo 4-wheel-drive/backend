@@ -1,6 +1,7 @@
 package com.pda.strategy_service.controller;
 
-import com.pda.strategy_service.domain.Strategy;
+import com.pda.common_service.response.ApiResponse;
+import com.pda.common_service.response.ResponseMessage;
 import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.mongodb.StrategyTemplate;
 import com.pda.strategy_service.service.StrategyService;
@@ -23,9 +24,12 @@ public class StrategyTemplateController {
     private final StrategyService strategyService;
 
     @GetMapping
-    public ResponseEntity<List<StrategyTemplate>> getAllStrategyTemplates() {
+    public ResponseEntity<ApiResponse<List<StrategyTemplate>>> getAllStrategyTemplates() {
         List<StrategyTemplate> templates = strategyTemplateService.getAllStrategyTemplates();
-        return ResponseEntity.ok(templates);
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(ResponseMessage.GET_STRATEGY_TEMPLATES.getCode(),
+                        ResponseMessage.GET_STRATEGY_TEMPLATES.getMessage(), templates));
     }
 
 //    @GetMapping("/owner/{ownerId}")
@@ -68,7 +72,7 @@ public class StrategyTemplateController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @GetMapping("/id/{strategyId}")
     public ResponseEntity<StrategyTemplate> getStrategyTemplateById(@PathVariable String strategyId) {
         StrategyTemplate template = strategyTemplateService.getStrategyTemplateById(strategyId);

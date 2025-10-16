@@ -1,5 +1,6 @@
 package com.pda.common_service.response;
 
+import com.pda.common_service.exception.StrategyException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,7 @@ public enum ResponseMessage {
     STRATEGY_NOT_FOUND("STRATEGY_NOT_FOUND", "존재하지 않는 전략입니다."),
     STRATEGY_SAVE_FAILED("STRATEGY-SAVE-FAILED", "전략 저장에 실패했습니다."),
     STRATEGY_SAVE_SUCCESS("STRATEGY-SAVE-SUCCESS", "전략 저장에 성공했습니다."),
+    STRATEGY_DELETE_SUCCESS("STRATEGY_DELETE_SUCCESS", "전략 삭제를 성공했습니다."),
     
 
 
@@ -48,6 +50,7 @@ public enum ResponseMessage {
     STRATEGY_TEMPLATE_FILE_READ_FAILED("STRATEGY-TEMPLATE-FILE-READ-FAILED", "전략 템플릿 파일 읽기에 실패했습니다."),
     STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED",
             "전략 템플릿 강제 재초기화에 실패했습니다."),
+    GET_STRATEGY_TEMPLATES("GET_STRATEGY_TEMPLATES", "원클릭 템플릿 조회를 성공했습니다."),
 
 
     /**
@@ -59,6 +62,10 @@ public enum ResponseMessage {
      * STOCK
      */
     STOCK_NOT_FOUND("STOCK_NOT_FOUND", "존재하지 않는 주식입니다"),
+    GET_ALL_STOCKS_SUCCESS("GET_ALL_STOCKS_SUCCESS", "종목 전체 조회에 성공했습니다."),
+    ALL_STOCK_FETCH_FAILED("ALL_STOCKS_FETCH_FAILED", "종목 전체 조회에 실패했습니다."),
+    GET_MY_STOCKS_SUCCESS("GET_MY_STOCKS_SUCCESS", "내 종목 조회에 성공했습니다."),
+    MY_STOCKS_FETCH_FAILED("MY_STOCKS_FETCH_FAILED", "내 종목 조회에 실패했습니다."),
 
     /**
      * Dashboard

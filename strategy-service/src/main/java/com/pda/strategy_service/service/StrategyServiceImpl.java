@@ -17,6 +17,7 @@ import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.domain.Strategy;
+import com.pda.strategy_service.domain.StrategyExistedStatus;
 import com.pda.strategy_service.domain.StrategySummary;
 import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
@@ -26,7 +27,6 @@ import com.pda.strategy_service.domain.mongodb.CustomStrategy;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.StrategySummaryRepository;
 import com.pda.strategy_service.repository.mongodb.CustomStrategyRepository;
-import com.pda.strategy_service.repository.mongodb.StrategyTemplateRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,13 +47,16 @@ public class StrategyServiceImpl implements StrategyService {
     private final StrategySummaryService strategySummaryService;
     private final StrategySummaryRepository strategySummaryRepository;
     private final CustomStrategyRepository customStrategyRepository;
-    private final StrategyTemplateRepository strategyTemplateRepository;
 
     @Override
     public ReadStrategies getStrategies(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
-        List<Strategy> strategies = strategyRepository.findAllByMember(member);
+        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatus(
+                member,
+                StrategyExistedStatus.EXISTED
+        );
+        ;
 
         List<StrategyDto> strategyDtos = new ArrayList<>();
 
@@ -73,7 +76,7 @@ public class StrategyServiceImpl implements StrategyService {
 
     @Override
     public ReadStrategy getMonoStrategy(Long memberId, Long strategyId) {
-        Strategy strategy = strategyRepository.findById(strategyId)
+        Strategy strategy = strategyRepository.findByIdAndStrategyExistedStatus(strategyId, StrategyExistedStatus.EXISTED)
                 .orElseThrow(() -> new StrategyException(ResponseMessage.STRATEGY_NOT_FOUND));
 
         if (!(Objects.equals(strategy.getMember().getId(), memberId))) {
@@ -141,4 +144,29 @@ public class StrategyServiceImpl implements StrategyService {
         }
     }
 
+    @Override
+    @Transactional
+    public void deleteStrategyById(Long strategyId, Long memberId) {
+        Strategy strategy = findStrategyById(strategyId);
+        Member member = strategy.getMember();
+
+        if (!Objects.equals(memberId, member.getId())) {
+            throw new AuthException(ResponseMessage.PERMISSION_DENY);
+        }
+
+        strategy.update(
+                strategy.getStock(),
+                strategy.getStrategyName(),
+                strategy.getStrategyActivatedStatus(),
+                StrategyExistedStatus.DELETED,
+                strategy.getStrategyProfitSummary()
+        );
+
+        customStrategyRepository.deleteByStrategyId(strategyId);
+    }
+
+    public Strategy findStrategyById(Long strategyId) {
+        return strategyRepository.findById(strategyId)
+                .orElseThrow(() -> new ResourceNotFound(ResponseMessage.STRATEGY_NOT_FOUND));
+    }
 }
