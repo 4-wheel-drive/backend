@@ -78,7 +78,7 @@ public class StrategyController {
 
     @DeleteMapping("/{strategyId}")
     public ResponseEntity<ApiResponse<String>> deleteStrategy(@PathVariable Long strategyId) {
-        Long memberId = 2L;
+        Long memberId = 1L;
         strategyService.deleteStrategyById(strategyId, memberId);
         return ResponseEntity
                 .ok()

@@ -50,6 +50,7 @@ public enum ResponseMessage {
     STRATEGY_TEMPLATE_FILE_READ_FAILED("STRATEGY-TEMPLATE-FILE-READ-FAILED", "전략 템플릿 파일 읽기에 실패했습니다."),
     STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED",
             "전략 템플릿 강제 재초기화에 실패했습니다."),
+    GET_STRATEGY_TEMPLATES("GET_STRATEGY_TEMPLATES", "원클릭 템플릿 조회를 성공했습니다."),
 
 
     /**
@@ -80,7 +81,6 @@ public enum ResponseMessage {
     DEPOSIT_DEFICIENT("DEPOSIT_DEFICIENT", "예수금이 부족합니다"),
     STOCK_QUANTITY_DEFICIENT("STOCK_QUANTITY_DEFICIENT", "보유 주식이 부족합니다"),
     ORDER_NOT_FOUND("ORDER_NOT_FOUND", "주문을 찾을 수 없습니다");
-
 
     private final String code;
     private final String message;
