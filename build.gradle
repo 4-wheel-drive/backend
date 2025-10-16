@@ -4,6 +4,14 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
@@ -82,6 +90,24 @@ project(":trading-service") {
         implementation 'org.springframework:spring-websocket'
         implementation 'org.springframework:spring-messaging'
         implementation project(":common-service")
+    }
+}
+
+project(":strategy-execution-service") {
+    bootJar {
+        enabled = false
+    }
+    jar {
+        enabled = true
+    }
+}
+
+project(":common-service") {
+    bootJar {
+        enabled = false
+    }
+    jar {
+        enabled = true
     }
 }
 

@@ -10,4 +10,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StrategyRepository extends JpaRepository<Strategy, Long> {
     List<Strategy> findAllByMemberAndStrategyExistedStatus(Member member, StrategyExistedStatus status);
     Optional<Strategy> findByIdAndStrategyExistedStatus(Long strategyId, StrategyExistedStatus status);
+    List<Strategy> findAllByMemberId(Long memberId);
 }
