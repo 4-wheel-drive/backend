@@ -6,6 +6,8 @@ import com.pda.common_service.stock.dto.StockInfo;
 import com.pda.common_service.user.domain.Member;
 import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
+import com.pda.strategy_service.domain.dto.StrategyMetaDto;
+import com.pda.strategy_service.domain.dto.StrategyWithMemberDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -95,5 +97,15 @@ public class Strategy extends BaseEntity {
 
     public SimpleStrategy toSimpleStrategyDto() {
         return new SimpleStrategy(id, strategyName);
+    }
+
+    public StrategyMetaDto toStrategyMetaDto() {
+        return new StrategyMetaDto(stock.getCode(), strategyName);
+    }
+
+    public StrategyWithMemberDto tostrategyWithMemberDto() {
+        return new StrategyWithMemberDto(
+                toStrategyMetaDto(), member.toDto()
+        );
     }
 }

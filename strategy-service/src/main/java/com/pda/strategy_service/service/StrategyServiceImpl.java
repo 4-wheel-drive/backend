@@ -11,6 +11,7 @@ import com.pda.common_service.stock.Stock;
 import com.pda.common_service.stock.dto.StockInfo;
 import com.pda.common_service.stock.repository.StockRepository;
 import com.pda.common_service.user.domain.Member;
+import com.pda.common_service.user.domain.dto.MemberDto;
 import com.pda.common_service.user.repository.MemberRepository;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitDto;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
@@ -23,6 +24,7 @@ import com.pda.strategy_service.domain.dto.SimpleStrategy;
 import com.pda.strategy_service.domain.dto.StrategyDto;
 import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.dto.StrategySummaryDto;
+import com.pda.strategy_service.domain.dto.StrategyWithMemberDto;
 import com.pda.strategy_service.domain.mongodb.CustomStrategy;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.StrategySummaryRepository;
@@ -76,7 +78,8 @@ public class StrategyServiceImpl implements StrategyService {
 
     @Override
     public ReadStrategy getMonoStrategy(Long memberId, Long strategyId) {
-        Strategy strategy = strategyRepository.findByIdAndStrategyExistedStatus(strategyId, StrategyExistedStatus.EXISTED)
+        Strategy strategy = strategyRepository.findByIdAndStrategyExistedStatus(strategyId,
+                        StrategyExistedStatus.EXISTED)
                 .orElseThrow(() -> new StrategyException(ResponseMessage.STRATEGY_NOT_FOUND));
 
         if (!(Objects.equals(strategy.getMember().getId(), memberId))) {
@@ -168,5 +171,10 @@ public class StrategyServiceImpl implements StrategyService {
     public Strategy findStrategyById(Long strategyId) {
         return strategyRepository.findById(strategyId)
                 .orElseThrow(() -> new ResourceNotFound(ResponseMessage.STRATEGY_NOT_FOUND));
+    }
+
+    @Override
+    public StrategyWithMemberDto getStrategyWithMember(Long strategyId, Long memberId) {
+        return findStrategyById(strategyId).tostrategyWithMemberDto();
     }
 }

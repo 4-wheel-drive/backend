@@ -1,18 +1,20 @@
 package com.pda.trading_service.service.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record KisDailyCcldResponse(
-        @JsonProperty("output1") List<Output1> output1
+        String rt_cd,
+        String msg_cd,
+        String msg1,
+        List<Output1> output1
 ) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Output1(
-            @JsonProperty("ord_no") String orderNo,
-            @JsonProperty("sll_buy_dvsn_cd") String side,
-            @JsonProperty("pdno") String productCode,
-            @JsonProperty("prdt_name") String productName,
-            @JsonProperty("ord_qty") String orderQty,
-            @JsonProperty("tot_ccld_qty") String executedQty,
-            @JsonProperty("avg_prvs") String avgPrice
+            String orderNo,
+            String orderQuantity,
+            String filledQuantity,
+            String avgPrice
     ) {}
 }
