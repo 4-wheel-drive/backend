@@ -16,7 +16,7 @@ public interface StockOrderRepository extends JpaRepository<StockOrder, Long> {
     Optional<StockOrder> findByTradeId(String tradeId);
 
     @Query(value = """
-                SELECT * 
+                SELECT *
                 FROM stock_order
                 WHERE order_status = :status
                 AND created_at BETWEEN :startOfDay AND :endOfDay
