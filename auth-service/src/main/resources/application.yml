@@ -12,8 +12,5 @@ jwt:
   issuer: "hello"
 kis:
   admin:
-    appkey: 
-    appSecret: 
-
-    
-
+    appkey: ${KIS_ADMIN_APPKEY}
+    appSecret: ${KIS_ADMIN_APPSECRET}
