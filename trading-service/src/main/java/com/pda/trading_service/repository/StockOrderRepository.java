@@ -2,6 +2,8 @@ package com.pda.trading_service.repository;
 
 import com.pda.trading_service.domain.order.OrderStatus;
 import com.pda.trading_service.domain.order.StockOrder;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,8 +15,15 @@ public interface StockOrderRepository extends JpaRepository<StockOrder, Long> {
 
     Optional<StockOrder> findByTradeId(String tradeId);
 
-    @Query("SELECT o FROM StockOrder o " +
-            "WHERE o.orderStatus = :status " +
-            "AND DATE(o.createdAt) = CURRENT_DATE")
-    List<StockOrder> findByStatusAndCreateAtToday(@Param("status") OrderStatus status);
+    @Query(value = """
+                SELECT * 
+                FROM stock_order
+                WHERE order_status = :status
+                AND created_at BETWEEN :startOfDay AND :endOfDay
+            """, nativeQuery = true)
+    List<StockOrder> findByStatusAndCreateAtToday(
+            @Param("status") String status,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
 }
