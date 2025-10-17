@@ -14,7 +14,6 @@ import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.StrategySummaryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

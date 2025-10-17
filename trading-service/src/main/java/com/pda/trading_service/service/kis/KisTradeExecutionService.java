@@ -133,21 +133,18 @@ public class KisTradeExecutionService {
         }
     }
 
-    /**
-     * 체결 상태 확인 및 TradeExecution 생성
-     */
     public TradeExecution checkTradeExecution(StockOrder stockOrder, LocalDate date,
                                               StrategyWithMemberDto strategyWithMember) {
         StrategyMetaDto strategyMetaDto = strategyWithMember.strategyMetaDto();
         MemberDto memberDto = strategyWithMember.memberDto();
 
-        log.info("[KIS] 체결내역 조회 일자(어제): {}", date);
+        log.info("[KIS] 체결내역 조회 일자: {}", date);
 
         KisDailyCcldResponse response = getDailyExecution(date, strategyMetaDto, memberDto, stockOrder);
 
         if (response == null || response.output1() == null) {
-            log.warn("[KIS] 체결내역 응답이 비어있음 → PENDING 처리");
-            return TradeExecution.create(stockOrder, TradeExecutionStatus.PENDING, 0, 0.0, 0.0);
+            log.warn("[KIS] 체결내역 응답이 비어있음 → 처리 건 없음");
+            return null;
         }
 
         Optional<KisDailyCcldResponse.Output1> orderData = response.output1().stream()
@@ -155,8 +152,8 @@ public class KisTradeExecutionService {
                 .findFirst();
 
         if (orderData.isEmpty()) {
-            log.warn("[KIS] 해당 주문번호({}) 체결정보 없음 → PENDING", stockOrder.getTradeId());
-            return TradeExecution.create(stockOrder, TradeExecutionStatus.PENDING, 0, 0.0, 0.0);
+            log.info("[KIS] 주문번호({})에 대한 체결 내역 없음 → 스킵", stockOrder.getTradeId());
+            return null;
         }
 
         KisDailyCcldResponse.Output1 info = orderData.get();
@@ -166,25 +163,19 @@ public class KisTradeExecutionService {
         double avgPrice = Double.parseDouble(info.avgPrice());
         double totalAmount = avgPrice * filledQty;
 
-        TradeExecutionStatus status;
-        OrderStatus orderStatus;
-
-        if (filledQty == 0) {
-            status = TradeExecutionStatus.PENDING;
-            orderStatus = OrderStatus.PENDING;
-        } else if (filledQty < orderedQty) {
-            status = TradeExecutionStatus.PARTIALLY_FILLED;
-            orderStatus = OrderStatus.PARTIALLY_FILLED;
-        } else {
-            status = TradeExecutionStatus.FILLED;
-            orderStatus = OrderStatus.FILLED;
+        if (filledQty == 0 || filledQty < orderedQty) {
+            log.debug("[KIS] 아직 전량 체결되지 않음 → 스킵");
+            return null;
         }
 
-        log.info("[KIS 체결결과] 상태={} / 체결수량={} / 평균단가={} / 총금액={}",
-                status, filledQty, avgPrice, totalAmount);
+        TradeExecutionStatus status = TradeExecutionStatus.FILLED;
+        OrderStatus orderStatus = OrderStatus.FILLED;
 
         stockOrder.updateStatus(orderStatus);
+
+        log.info("[KIS 체결완료] 상태={} / 체결수량={} / 평균단가={} / 총금액={}",
+                status, filledQty, avgPrice, totalAmount);
+
         return TradeExecution.create(stockOrder, status, filledQty, avgPrice, totalAmount);
     }
-
 }
