@@ -1,6 +1,7 @@
 package com.pda.common_service.user.domain;
 
 import com.pda.common_service.BaseEntity;
+import com.pda.common_service.user.domain.dto.MemberDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -51,5 +52,10 @@ public class Member extends BaseEntity {
                 .memberAppKey(memberAppKey)
                 .memberAppSecret(memberAppSecret)
                 .build();
+    }
+
+    public MemberDto toDto() {
+        return new MemberDto(this.id, this.memberId, this.memberName, this.memberAccountNumber, this.memberAppKey,
+                this.memberAppSecret);
     }
 }

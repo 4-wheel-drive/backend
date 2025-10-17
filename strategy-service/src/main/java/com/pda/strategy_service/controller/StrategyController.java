@@ -5,17 +5,19 @@ import com.pda.common_service.authentication.Auth;
 import com.pda.common_service.authentication.MemberOnly;
 import com.pda.common_service.response.ApiResponse;
 import com.pda.common_service.response.ResponseMessage;
+import com.pda.common_service.user.domain.Member;
+import com.pda.common_service.user.domain.dto.MemberDto;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.domain.Strategy;
 import com.pda.strategy_service.domain.dto.StrategyMetaDto;
+import com.pda.strategy_service.domain.dto.StrategyWithMemberDto;
 import com.pda.strategy_service.domain.mongodb.CustomStrategy;
 import com.pda.strategy_service.service.StrategyService;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,11 +29,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/v1/strategies")
 public class StrategyController {
     private final StrategyService strategyService;
 
-//    @MemberOnly
+    //    @MemberOnly
     @GetMapping()
 //    public ResponseEntity<ApiResponse<ReadStrategies>> getStrategies(@Auth Accessor accessor) {
     public ResponseEntity<ApiResponse<ReadStrategies>> getStrategies() {
@@ -85,6 +88,19 @@ public class StrategyController {
                 .body(ApiResponse.success(
                         ResponseMessage.STRATEGY_DELETE_SUCCESS.getCode(),
                         ResponseMessage.STRATEGY_DELETE_SUCCESS.getMessage()
+                ));
+    }
+
+    @GetMapping("/{strategyId}/info")
+    public ResponseEntity<ApiResponse<StrategyWithMemberDto>> getStrategyInfo(@PathVariable Long strategyId) {
+        Long memberId = 1L;
+        StrategyWithMemberDto foundMember = strategyService.getStrategyWithMember(strategyId, memberId);
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(
+                        ResponseMessage.STRATEGY_DELETE_SUCCESS.getCode(),
+                        ResponseMessage.STRATEGY_DELETE_SUCCESS.getMessage(),
+                        foundMember
                 ));
     }
 }

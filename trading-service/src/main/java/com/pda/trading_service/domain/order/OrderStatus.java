@@ -4,6 +4,5 @@ public enum OrderStatus {
     PENDING,
     CREATED,
     FILLED,
-    CANCELLED,
-    FAIL
+    PARTIALLY_FILLED, FAIL
 }

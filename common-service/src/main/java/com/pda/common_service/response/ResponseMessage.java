@@ -36,7 +36,8 @@ public enum ResponseMessage {
     STRATEGY_SAVE_FAILED("STRATEGY-SAVE-FAILED", "전략 저장에 실패했습니다."),
     STRATEGY_SAVE_SUCCESS("STRATEGY-SAVE-SUCCESS", "전략 저장에 성공했습니다."),
     STRATEGY_DELETE_SUCCESS("STRATEGY_DELETE_SUCCESS", "전략 삭제를 성공했습니다."),
-    
+    GET_STRATEGY_MEMBER_SUCCESS("GET_STRATEGY_MEMBER_SUCCESS", "전략의 유저 조회를 성공했습니다."),
+
 
 
     /**

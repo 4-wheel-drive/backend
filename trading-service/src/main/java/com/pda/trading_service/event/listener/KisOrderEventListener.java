@@ -10,7 +10,6 @@ import com.pda.trading_service.repository.StockOrderRepository;
 import com.pda.trading_service.service.dto.OrderEventDto;
 import com.pda.trading_service.service.kis.KisOrderService;
 import com.pda.trading_service.service.kis.dto.KisOrderResponse;
-import com.pda.trading_service.websocket.KisWebSocketClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -24,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class KisOrderEventListener {
 
     private final KisOrderService kisOrderService;
-    private final KisWebSocketClient kisWebSocketClient;
     private final StockOrderRepository stockOrderRepository;
     private final KisTokenReader kisTokenReader;
 
