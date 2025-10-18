@@ -8,6 +8,8 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.GetStockProfit;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetStocks;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactions;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactionsByStock;
+import com.pda.strategy_service.controller.dto.KisPsblOrderResponse;
+import com.pda.strategy_service.controller.dto.OrderPossibleBalanceResponse;
 import com.pda.strategy_service.service.DashBoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -116,5 +118,17 @@ public class DashBoardController {
                         ResponseMessage.GET_TRANSACTIONS_BY_STOCK_SUCCESS.getCode(),
                         ResponseMessage.GET_TRANSACTIONS_BY_STOCK_SUCCESS.getMessage(),
                         transactions));
+    }
+
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<OrderPossibleBalanceResponse>> getOrderPossibleBalance() {
+        Long memberId = 1L;
+        OrderPossibleBalanceResponse orderPossibleBalanceResponse = dashBoardService.getAvailableCash(memberId);
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(
+                        ResponseMessage.GET_POSSIBLE_BALANCE_SUCCESS.getCode(),
+                        ResponseMessage.GET_POSSIBLE_BALANCE_SUCCESS.getMessage(),
+                        orderPossibleBalanceResponse));
     }
 }
