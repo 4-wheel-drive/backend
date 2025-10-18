@@ -2,7 +2,11 @@ package com.pda.trading_service.service.kis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pda.common_service.exception.ResourceNotFound;
 import com.pda.common_service.repository.KisTokenReader;
+import com.pda.common_service.response.ResponseMessage;
+import com.pda.common_service.stock.Stock;
+import com.pda.common_service.stock.repository.StockRepository;
 import com.pda.common_service.user.domain.dto.MemberDto;
 import com.pda.trading_service.controller.dto.StrategyMetaDto;
 import com.pda.trading_service.controller.dto.StrategyWithMemberDto;
@@ -30,6 +34,7 @@ public class KisTradeExecutionService {
 
     private final KisTokenReader kisTokenReader;
     private final WebClient webClient;
+    private final StockRepository stockRepository;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -161,7 +166,6 @@ public class KisTradeExecutionService {
         int orderedQty = Integer.parseInt(info.orderQuantity());
         int filledQty = Integer.parseInt(info.filledQuantity());
         double avgPrice = Double.parseDouble(info.avgPrice());
-        double totalAmount = avgPrice * filledQty;
 
         if (filledQty == 0 || filledQty < orderedQty) {
             log.debug("[KIS] 아직 전량 체결되지 않음 → 스킵");
@@ -173,9 +177,11 @@ public class KisTradeExecutionService {
 
         stockOrder.updateStatus(orderStatus);
 
-        log.info("[KIS 체결완료] 상태={} / 체결수량={} / 평균단가={} / 총금액={}",
-                status, filledQty, avgPrice, totalAmount);
+        log.info("[KIS 체결완료] 상태={} / 체결수량={} / 평균단가={} / 총금액={}", status, filledQty, avgPrice);
 
-        return TradeExecution.create(stockOrder, status, filledQty, avgPrice, totalAmount);
+        Stock stock = stockRepository.findById(strategyMetaDto.stockId()).orElseThrow(() -> new ResourceNotFound(
+                ResponseMessage.STOCK_NOT_FOUND));
+
+        return TradeExecution.create(stockOrder, status, filledQty, avgPrice, stock);
     }
 }

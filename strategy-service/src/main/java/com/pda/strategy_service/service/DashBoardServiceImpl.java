@@ -1,7 +1,9 @@
 package com.pda.strategy_service.service;
 
+import com.pda.common_service.exception.KisException;
 import com.pda.common_service.exception.MemberException;
 import com.pda.common_service.exception.StrategyException;
+import com.pda.common_service.repository.KisTokenReader;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.common_service.stock.Stock;
 import com.pda.common_service.user.domain.Member;
@@ -20,6 +22,8 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.StrategyInfo;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.TransactionItem;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactionsByStock;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.TransactionByStockItem;
+import com.pda.strategy_service.controller.dto.KisPsblOrderResponse;
+import com.pda.strategy_service.controller.dto.OrderPossibleBalanceResponse;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.domain.Strategy;
 import com.pda.strategy_service.domain.StrategyExistedStatus;
@@ -35,17 +39,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DashBoardServiceImpl implements DashBoardService {
     private final MemberRepository memberRepository;
     private final StrategyRepository strategyRepository;
     private final TransactionRepository transactionRepository;
     private final ProfitCalculator profitCalculator;
+    private static final String PSBL_ORDER_PATH = "/uapi/domestic-stock/v1/trading/inquire-psbl-order";
+    private static final String TR_ID_VIRTUAL_PSBL = "VTTC8908R";
+    private final KisTokenReader kisTokenReader;
+    private final WebClient kisWebClient;
 
     @Override
     public GetProfitRate getProfitRate(Long memberId) {
@@ -335,5 +348,59 @@ public class DashBoardServiceImpl implements DashBoardService {
                 stockInfo.stockName(),
                 items
         );
+    }
+
+    @Override
+    public OrderPossibleBalanceResponse getAvailableCash(Long memberId) {
+        String stockCode = "005930"; // 테스트용 종목
+        String orderPrice = "0";     // 테스트용 가격
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
+
+        String accessToken = kisTokenReader.getMemberAccessToken(member.getId());
+        String appKey = member.getMemberAppKey();
+        String appSecret = member.getMemberAppSecret();
+        String accountNumber = member.getMemberAccountNumber();
+
+        try {
+            String cano = accountNumber.substring(0, 8);
+            String prdtCd = accountNumber.substring(8);
+
+            log.info("[KIS 매수가능조회 요청] 계좌: {}, 종목: {}, 가격: {}", accountNumber, stockCode, orderPrice);
+
+            KisPsblOrderResponse kisResponse = kisWebClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(PSBL_ORDER_PATH)
+                            .queryParam("CANO", cano)
+                            .queryParam("ACNT_PRDT_CD", prdtCd)
+                            .queryParam("PDNO", stockCode)
+                            .queryParam("ORD_UNPR", orderPrice)
+                            .queryParam("ORD_DVSN", "00")        // 지정가
+                            .queryParam("CMA_EVLU_AMT_ICLD_YN", "N")
+                            .queryParam("OVRS_ICLD_YN", "N")
+                            .build())
+                    .header("authorization", "Bearer " + accessToken)
+                    .header("appkey", appKey)
+                    .header("appsecret", appSecret)
+                    .header("tr_id", TR_ID_VIRTUAL_PSBL)
+                    .header("custtype", "P")
+                    .retrieve()
+                    .bodyToMono(KisPsblOrderResponse.class)
+                    .doOnSuccess(res -> log.info("[KIS 매수가능조회 성공] 계좌: {}, 응답: {}", accountNumber, res))
+                    .doOnError(WebClientResponseException.class, e ->
+                            log.error("[KIS 매수가능조회 실패] HTTP 오류: {}", e.getResponseBodyAsString()))
+                    .doOnError(e -> log.error("[KIS 매수가능조회 예외 발생] {}", e.getMessage()))
+                    .onErrorResume(e -> {
+                        throw new KisException(ResponseMessage.ORDER_CREATE_FAIL);
+                    })
+                    .block();
+
+            BigDecimal orderPossibleCash = new BigDecimal(kisResponse.output().orderPossibleCash());
+            return new OrderPossibleBalanceResponse(orderPossibleCash);
+
+        } catch (Exception e) {
+            log.error("[KIS 매수가능조회 실패] 계좌: {}, 사유: {}", member.getMemberAccountNumber(), e.getMessage());
+            throw new KisException(ResponseMessage.ORDER_CREATE_FAIL);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.pda.trading_service.domain.execution;
 
 import com.pda.common_service.BaseEntity;
+import com.pda.common_service.stock.Stock;
 import com.pda.trading_service.domain.TradeSide;
 import com.pda.trading_service.domain.execution.dto.TradeExecutionDto;
 import com.pda.trading_service.domain.order.StockOrder;
@@ -49,8 +50,9 @@ public class TradeExecution extends BaseEntity {
     private LocalDateTime executionTime;
 
     /** 종목 코드 */
-    @Column(length = 30)
-    private String code;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "code")
+    private Stock stock;
 
     /** 상태 업데이트 */
     public void updateStatus(TradeExecutionStatus newStatus) {
@@ -60,8 +62,7 @@ public class TradeExecution extends BaseEntity {
     public static TradeExecution create(StockOrder stockOrder,
                                         TradeExecutionStatus tradeExecutionStatus,
                                         int filledQuantity,
-                                        double avgPrice,
-                                        double totalAmount) {
+                                        double avgPrice, Stock stock) {
         return TradeExecution.builder()
                 .stockOrder(stockOrder)
                 .tradeSide(stockOrder.getTradeSide())
@@ -69,6 +70,7 @@ public class TradeExecution extends BaseEntity {
                 .quantity(filledQuantity)
                 .price(BigDecimal.valueOf(avgPrice))
                 .executionTime(LocalDateTime.now())
+                .stock(stock)
                 .build();
     }
 

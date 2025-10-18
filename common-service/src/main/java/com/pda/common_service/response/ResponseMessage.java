@@ -77,6 +77,7 @@ public enum ResponseMessage {
     GET_STOCKS_PROFIT_SUCCESS("GET_STOCKS_PROFIT_SUCCESS", "종목별 수익률 조회에 성공했습니다."),
     GET_TRANSACTIONS_SUCCESS("GET_TRANSACTIONS_SUCCESS", "전체 거래 체결 내역 조회에 성공했습니다."),
     GET_TRANSACTIONS_BY_STOCK_SUCCESS("GET_TRANSACTIONS_BY_STOCK_SUCCESS", "종목별 거래 체결 내역 조회에 성공했습니다."),
+    GET_POSSIBLE_BALANCE_SUCCESS("GET_POSSIBLE_BALANCE_SUCCESS", "거래 가능한 잔액 가져오기를 성공했습니다"),
 
     /**
      * Order

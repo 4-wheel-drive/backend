@@ -60,14 +60,9 @@ public class OrderService {
     }
 
     private void validateBalance(Member member, OrderCreateReqDto orderCreateReqDto) {
-        KisBalanceResponse balance = kisBalanceService.getBalance(member).block();
+        BigDecimal availableBalance = kisBalanceService.getAvailableCashSync(member, orderCreateReqDto.stockCode(),
+                orderCreateReqDto.orderPrice());
 
-        String totalDepositAmount = "0";
-        if (balance.summaries() != null && !balance.summaries().isEmpty()) {
-            totalDepositAmount = balance.summaries().get(0).totalDepositAmount();
-        }
-
-        BigDecimal availableBalance = new BigDecimal(totalDepositAmount);
         BigDecimal requiredAmount = orderCreateReqDto.orderPrice()
                 .multiply(BigDecimal.valueOf(orderCreateReqDto.orderQuantity()));
 
@@ -76,8 +71,9 @@ public class OrderService {
         }
     }
 
+
     private void validateSell(Member member, OrderCreateReqDto orderCreateReqDto) {
-        KisBalanceResponse balance = kisBalanceService.getBalance(member).block();
+        KisBalanceResponse balance = kisBalanceService.getBalanceSync(member);
         Integer availableStocks = validateHoldingStocksQuantity(balance.balances(), orderCreateReqDto.stockCode());
 
         if (availableStocks < orderCreateReqDto.orderQuantity()) {
