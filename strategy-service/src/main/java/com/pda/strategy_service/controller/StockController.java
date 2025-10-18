@@ -17,49 +17,32 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/stocks")
 public class StockController {
-    
+
     private final StockService stockService;
-    
+
     @GetMapping
     public ResponseEntity<ApiResponse<ReadStocks>> getAllStocks() {
-        try {
-            ReadStocks readStocks = stockService.getAllStocks();
-            
-            return ResponseEntity
-                    .ok()
-                    .body(ApiResponse.success(
-                            ResponseMessage.GET_ALL_STOCKS_SUCCESS.getCode(),
-                            ResponseMessage.GET_ALL_STOCKS_SUCCESS.getMessage(),
-                            readStocks));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .ok()
-                    .body(ApiResponse.failure(
-                            ResponseMessage.ALL_STOCK_FETCH_FAILED.getCode(),
-                            ResponseMessage.ALL_STOCK_FETCH_FAILED.getMessage()));
-        }
+        ReadStocks readStocks = stockService.getAllStocks();
+
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(
+                        ResponseMessage.GET_ALL_STOCKS_SUCCESS.getCode(),
+                        ResponseMessage.GET_ALL_STOCKS_SUCCESS.getMessage(),
+                        readStocks));
     }
 
-    @MemberOnly
     @GetMapping("/my-stocks")
-    public ResponseEntity<ApiResponse<ReadStocks>> getMyStocks(@Auth Accessor accessor) {
-        try {
-            Long memberId = accessor.memberId();
-            
-            ReadStocks readStocks = stockService.getMyStocks(memberId);
-            
-            return ResponseEntity
-                    .ok()
-                    .body(ApiResponse.success(
-                            ResponseMessage.GET_MY_STOCKS_SUCCESS.getCode(),
-                            ResponseMessage.GET_MY_STOCKS_SUCCESS.getMessage(),
-                            readStocks));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .ok()
-                    .body(ApiResponse.failure(
-                            ResponseMessage.MY_STOCKS_FETCH_FAILED.getCode(),
-                            ResponseMessage.MY_STOCKS_FETCH_FAILED.getMessage()));
-        }
+    public ResponseEntity<ApiResponse<ReadStocks>> getMyStocks() {
+        Long memberId = 1L;
+
+        ReadStocks readStocks = stockService.getMyStocks(memberId);
+
+        return ResponseEntity
+                .ok()
+                .body(ApiResponse.success(
+                        ResponseMessage.GET_MY_STOCKS_SUCCESS.getCode(),
+                        ResponseMessage.GET_MY_STOCKS_SUCCESS.getMessage(),
+                        readStocks));
     }
 }
