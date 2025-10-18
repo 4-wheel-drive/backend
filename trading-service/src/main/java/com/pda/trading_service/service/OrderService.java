@@ -60,7 +60,8 @@ public class OrderService {
     }
 
     private void validateBalance(Member member, OrderCreateReqDto orderCreateReqDto) {
-        BigDecimal availableBalance = kisBalanceService.getAvailableCashSync(member);
+        BigDecimal availableBalance = kisBalanceService.getAvailableCashSync(member, orderCreateReqDto.stockCode(),
+                orderCreateReqDto.orderPrice());
 
         BigDecimal requiredAmount = orderCreateReqDto.orderPrice()
                 .multiply(BigDecimal.valueOf(orderCreateReqDto.orderQuantity()));
