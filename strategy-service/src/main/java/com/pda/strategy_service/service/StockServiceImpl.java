@@ -9,6 +9,7 @@ import com.pda.strategy_service.controller.dto.StockResponse.StockItem;
 import com.pda.strategy_service.domain.Strategy;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +49,7 @@ public class StockServiceImpl implements StockService {
         
         List<Stock> uniqueStocks = strategies.stream()
                 .map(Strategy::getStock)
-                .filter(stock -> stock != null)
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
         
