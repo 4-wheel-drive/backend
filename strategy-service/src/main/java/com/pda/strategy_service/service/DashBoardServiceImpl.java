@@ -23,13 +23,13 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.TransactionItem
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactionsByStock;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.TransactionByStockItem;
 import com.pda.strategy_service.controller.dto.KisPsblOrderResponse;
-import com.pda.strategy_service.controller.dto.OrderPossibleBalanceResponse;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.domain.Strategy;
 import com.pda.strategy_service.domain.StrategyExistedStatus;
 import com.pda.strategy_service.domain.Transaction;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.TransactionRepository;
+import com.pda.strategy_service.service.dto.OrderPossibleBalanceResponse;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -45,7 +45,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
@@ -396,7 +395,12 @@ public class DashBoardServiceImpl implements DashBoardService {
                     .block();
 
             BigDecimal orderPossibleCash = new BigDecimal(kisResponse.output().orderPossibleCash());
-            return new OrderPossibleBalanceResponse(orderPossibleCash);
+
+            return new OrderPossibleBalanceResponse(
+                    member.getMemberName(),
+                    accountNumber,
+                    orderPossibleCash
+            );
 
         } catch (Exception e) {
             log.error("[KIS 매수가능조회 실패] 계좌: {}, 사유: {}", member.getMemberAccountNumber(), e.getMessage());

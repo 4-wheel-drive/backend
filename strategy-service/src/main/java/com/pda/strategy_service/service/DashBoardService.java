@@ -6,11 +6,8 @@ import com.pda.strategy_service.controller.dto.DashBoardResponse.GetStockProfit;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetStocks;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactions;
 import com.pda.strategy_service.controller.dto.DashBoardResponse.GetTransactionsByStock;
-import com.pda.strategy_service.controller.dto.KisPsblOrderResponse;
-import com.pda.strategy_service.controller.dto.OrderPossibleBalanceResponse;
-import java.math.BigDecimal;
+import com.pda.strategy_service.service.dto.OrderPossibleBalanceResponse;
 import org.springframework.data.domain.Pageable;
-import reactor.core.publisher.Mono;
 
 public interface DashBoardService {
     GetProfitRate getProfitRate(Long memberId);

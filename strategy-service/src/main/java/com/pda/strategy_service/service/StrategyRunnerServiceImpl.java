@@ -72,7 +72,7 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     log.info("📝 Python 코드 생성 시작 - strategyId: {}, symbol: {}", strategyId, symbol);
     String pythonCode = codeGenerator.generateCode(
         strategyJson,
-        memberId.intValue(),
+        memberId,
         symbol);
     log.info("✅ Python 코드 생성 완료 - 길이: {} bytes", pythonCode.length());
 
@@ -188,7 +188,7 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     log.info("📝 Python 코드 생성 시작 (미리보기) - strategyId: {}, symbol: {}", strategyId, symbol);
     String pythonCode = codeGenerator.generateCode(
         strategyJson,
-        memberId.intValue(),
+        memberId,
         symbol);
     log.info("✅ Python 코드 생성 완료 (미리보기) - 길이: {} bytes", pythonCode.length());
 

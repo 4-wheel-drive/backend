@@ -13,6 +13,8 @@ import com.pda.strategy_service.domain.Strategy;
 import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.dto.StrategyWithMemberDto;
 import com.pda.strategy_service.domain.mongodb.CustomStrategy;
+import com.pda.strategy_service.service.StrategyCodeGenerator;
+import com.pda.strategy_service.service.StrategyCodeSummaryService;
 import com.pda.strategy_service.service.StrategyService;
 import com.pda.strategy_service.service.StrategyRunnerService;
 import java.util.List;
@@ -36,6 +38,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class StrategyController {
   private final StrategyService strategyService;
   private final StrategyRunnerService strategyRunnerService;
+  private final StrategyCodeGenerator strategyCodeGenerator;
+  private final StrategyCodeSummaryService strategyCodeSummaryService;
 
   // @MemberOnly
   @GetMapping()
@@ -74,6 +78,12 @@ public class StrategyController {
     StrategyMetaDto strategyMeta = new StrategyMetaDto(stockId, strategyName);
     Strategy strategy = strategyService.saveStrategyMeta(1L, strategyMeta);
     CustomStrategy customStrategy = strategyService.saveStrategy(strategy.getId(), strategyJson);
+
+    // 코드 생성
+    String summarizeCode = strategyCodeGenerator.generateCode(strategyJson, 1L, stockId);
+
+    // 코드 summary and save
+    strategyCodeSummaryService.generateSummaryAndSave(strategy.getId(), summarizeCode);
 
     return ResponseEntity
         .ok()
