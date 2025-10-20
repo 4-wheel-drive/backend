@@ -84,11 +84,11 @@ public class KisAuthService {
         Map<String, String> body = Map.of(
                 "grant_type", "client_credentials",
                 "appkey", appKey,
-                "secretkey", secretKey
+                "appsecret", secretKey
         );
 
         KisTokenResponse response = webClient.post()
-                .uri(REAL_APPROVAL_URL)
+                .uri(REAL_TOKEN_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
