@@ -18,6 +18,7 @@ import com.pda.strategy_service.controller.dto.StrategyResponse.ProfitSeries;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategies;
 import com.pda.strategy_service.controller.dto.StrategyResponse.ReadStrategy;
 import com.pda.strategy_service.domain.Strategy;
+import com.pda.strategy_service.domain.StrategyCodeSummary;
 import com.pda.strategy_service.domain.StrategyExistedStatus;
 import com.pda.strategy_service.domain.StrategySummary;
 import com.pda.strategy_service.domain.dto.SimpleStrategy;
@@ -26,6 +27,7 @@ import com.pda.strategy_service.domain.dto.StrategyMetaDto;
 import com.pda.strategy_service.domain.dto.StrategySummaryDto;
 import com.pda.strategy_service.domain.dto.StrategyWithMemberDto;
 import com.pda.strategy_service.domain.mongodb.CustomStrategy;
+import com.pda.strategy_service.repository.jpa.StrategyCodeSummaryRepository;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
 import com.pda.strategy_service.repository.jpa.StrategySummaryRepository;
 import com.pda.strategy_service.repository.mongodb.CustomStrategyRepository;
@@ -49,6 +51,7 @@ public class StrategyServiceImpl implements StrategyService {
     private final StrategySummaryService strategySummaryService;
     private final StrategySummaryRepository strategySummaryRepository;
     private final CustomStrategyRepository customStrategyRepository;
+    private final StrategyCodeSummaryRepository strategyCodeSummaryRepository;
 
     @Override
     public ReadStrategies getStrategies(Long memberId) {
@@ -101,8 +104,10 @@ public class StrategyServiceImpl implements StrategyService {
         StockInfo stockInfo = stock.toDto();
         SimpleStrategy simpleStrategy = strategy.toSimpleStrategyDto();
 
+        StrategyCodeSummary strategyCodeSummary = strategyCodeSummaryRepository.findByStrategy(strategy);
+
         return new ReadStrategy(stockInfo, simpleStrategy, strategyProfit, customStrategy, periodSeries,
-                strategySummaryDto);
+                strategySummaryDto, strategyCodeSummary.getCodeSummary());
     }
 
     @Override

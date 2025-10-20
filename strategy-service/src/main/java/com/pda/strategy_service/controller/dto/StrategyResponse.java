@@ -21,7 +21,8 @@ public class StrategyResponse {
             ProfitDto strategyProfit,
             CustomStrategy strategyTemplate,
             ProfitSeries profitSeries,
-            StrategySummaryDto strategySummary
+            StrategySummaryDto strategySummary,
+            String code
     ) {
     }
 
