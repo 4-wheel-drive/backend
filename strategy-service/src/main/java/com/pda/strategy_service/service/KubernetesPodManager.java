@@ -7,6 +7,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.Config;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -25,17 +26,33 @@ public class KubernetesPodManager {
   private CoreV1Api coreV1Api;
 
   // EKS 설정
-  private static final String NAMESPACE = "backend";
-  private static final String ECR_IMAGE = "618221165332.dkr.ecr.ap-northeast-2.amazonaws.com/strategy-runner:latest";
-  private static final String IMAGE_PULL_SECRET = "ecr-secret";
+  @Value("${kubernetes.namespace:backend}")
+  private String namespace;
 
-  // 환경 변수 기본값
-  private static final String KAFKA_BROKERS = "my-cluster-kafka-bootstrap.kafka:9092";
-  private static final String REDIS_HOST = "redis-master.redis";
-  private static final String REDIS_PORT = "6379";
-  private static final String REDIS_PASSWORD = "admin1024";
-  private static final String TRADING_SERVICE_URL = "http://trading-service.backend:8080";
-  private static final String STRATEGY_SERVICE_URL = "http://strategy-service.backend:8081";
+  @Value("${kubernetes.ecr-image:618221165332.dkr.ecr.ap-northeast-2.amazonaws.com/strategy-runner:latest}")
+  private String ecrImage;
+
+  @Value("${kubernetes.image-pull-secret:ecr-secret}")
+  private String imagePullSecret;
+
+  // 환경 변수 설정
+  @Value("${kafka.bootstrap-servers:my-cluster-kafka-bootstrap.kafka:9092}")
+  private String kafkaBrokers;
+
+  @Value("${spring.data.redis.host:redis-master.redis}")
+  private String redisHost;
+
+  @Value("${spring.data.redis.port:6379}")
+  private String redisPort;
+
+  @Value("${spring.data.redis.password:}")
+  private String redisPassword;
+
+  @Value("${trading-service.url:http://trading-service.backend:8082}")
+  private String tradingServiceUrl;
+
+  @Value("${strategy-service.url:http://strategy-service.backend:8081}")
+  private String strategyServiceUrl;
 
   @PostConstruct
   public void init() {
@@ -54,17 +71,19 @@ public class KubernetesPodManager {
   /**
    * 전략 실행 Pod 생성
    * 
-   * @param strategyId 전략 ID
-   * @param memberId   회원 ID
-   * @param pythonCode 실행할 Python 코드
-   * @param symbol     종목 코드
+   * @param strategyId   전략 ID
+   * @param memberId     회원 ID
+   * @param pythonCode   실행할 Python 코드
+   * @param symbol       종목 코드
+   * @param strategyJson 전략 JSON (buy/sell 정보 포함)
    * @return Pod 이름
    */
-  public String createStrategyPod(Long strategyId, Long memberId, String pythonCode, String symbol) {
+  public String createStrategyPod(Long strategyId, Long memberId, String pythonCode, String symbol,
+      Map<String, Object> strategyJson) {
     log.info("전략 Pod 생성 시작 - strategyId: {}, memberId: {}, symbol: {}", strategyId, memberId, symbol);
 
-    String podName = generatePodName(memberId, symbol);
-    String configMapName = generateConfigMapName(memberId, symbol);
+    String podName = generatePodName(memberId, symbol, strategyJson);
+    String configMapName = generateConfigMapName(memberId, symbol, strategyJson);
 
     try {
       // 1. 기존 리소스 정리 (있다면)
@@ -87,14 +106,15 @@ public class KubernetesPodManager {
   /**
    * 전략 실행 Pod 삭제
    * 
-   * @param memberId 회원 ID
-   * @param symbol   종목 코드
+   * @param memberId     회원 ID
+   * @param symbol       종목 코드
+   * @param strategyJson 전략 JSON (buy/sell 정보 포함)
    */
-  public void deleteStrategyPod(Long memberId, String symbol) {
+  public void deleteStrategyPod(Long memberId, String symbol, Map<String, Object> strategyJson) {
     log.info("전략 Pod 삭제 시작 - memberId: {}, symbol: {}", memberId, symbol);
 
-    String podName = generatePodName(memberId, symbol);
-    String configMapName = generateConfigMapName(memberId, symbol);
+    String podName = generatePodName(memberId, symbol, strategyJson);
+    String configMapName = generateConfigMapName(memberId, symbol, strategyJson);
 
     try {
       cleanupExistingResources(podName, configMapName);
@@ -121,7 +141,7 @@ public class KubernetesPodManager {
     // Metadata 설정
     V1ObjectMeta metadata = new V1ObjectMeta();
     metadata.setName(configMapName);
-    metadata.setNamespace(NAMESPACE);
+    metadata.setNamespace(namespace);
     metadata.setLabels(Map.of(
         "app", "strategy-executor",
         "strategy-id", String.valueOf(strategyId),
@@ -133,7 +153,7 @@ public class KubernetesPodManager {
     configMap.setData(Map.of("strategy.py", pythonCode));
 
     try {
-      coreV1Api.createNamespacedConfigMap(NAMESPACE, configMap).execute();
+      coreV1Api.createNamespacedConfigMap(namespace, configMap).execute();
       log.info("ConfigMap 생성 완료 - name: {}", configMapName);
     } catch (ApiException e) {
       log.error("ConfigMap 생성 실패 - code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
@@ -157,7 +177,7 @@ public class KubernetesPodManager {
     // Metadata 설정
     V1ObjectMeta metadata = new V1ObjectMeta();
     metadata.setName(podName);
-    metadata.setNamespace(NAMESPACE);
+    metadata.setNamespace(namespace);
     metadata.setLabels(Map.of(
         "app", "strategy-executor",
         "strategy-id", String.valueOf(strategyId),
@@ -169,14 +189,14 @@ public class KubernetesPodManager {
     V1PodSpec spec = new V1PodSpec();
 
     // ImagePullSecrets 설정 (ECR 인증)
-    V1LocalObjectReference imagePullSecret = new V1LocalObjectReference();
-    imagePullSecret.setName(IMAGE_PULL_SECRET);
-    spec.setImagePullSecrets(List.of(imagePullSecret));
+    V1LocalObjectReference pullSecret = new V1LocalObjectReference();
+    pullSecret.setName(imagePullSecret);
+    spec.setImagePullSecrets(List.of(pullSecret));
 
     // Container 설정
     V1Container container = new V1Container();
     container.setName("strategy-runner");
-    container.setImage(ECR_IMAGE);
+    container.setImage(ecrImage);
     container.setCommand(List.of("python", "-u", "/app/strategy.py")); // -u: unbuffered output
     container.setImagePullPolicy("Always");
 
@@ -185,12 +205,12 @@ public class KubernetesPodManager {
         createEnvVar("STRATEGY_ID", String.valueOf(strategyId)),
         createEnvVar("MEMBER_ID", String.valueOf(memberId)),
         createEnvVar("SYMBOL", symbol),
-        createEnvVar("KAFKA_BROKERS", KAFKA_BROKERS),
-        createEnvVar("REDIS_HOST", REDIS_HOST),
-        createEnvVar("REDIS_PORT", REDIS_PORT),
-        createEnvVar("REDIS_PASSWORD", REDIS_PASSWORD),
-        createEnvVar("TRADING_SERVICE_URL", TRADING_SERVICE_URL),
-        createEnvVar("STRATEGY_SERVICE_URL", STRATEGY_SERVICE_URL));
+        createEnvVar("KAFKA_BROKERS", kafkaBrokers),
+        createEnvVar("REDIS_HOST", redisHost),
+        createEnvVar("REDIS_PORT", redisPort),
+        createEnvVar("REDIS_PASSWORD", redisPassword),
+        createEnvVar("TRADING_SERVICE_URL", tradingServiceUrl),
+        createEnvVar("STRATEGY_SERVICE_URL", strategyServiceUrl));
     container.setEnv(envVars);
 
     // Volume Mount 설정
@@ -232,7 +252,7 @@ public class KubernetesPodManager {
     pod.setSpec(spec);
 
     try {
-      coreV1Api.createNamespacedPod(NAMESPACE, pod).execute();
+      coreV1Api.createNamespacedPod(namespace, pod).execute();
       log.info("Pod 생성 완료 - name: {}", podName);
     } catch (ApiException e) {
       log.error("Pod 생성 실패 - code: {}, body: {}", e.getCode(), e.getResponseBody(), e);
@@ -260,7 +280,7 @@ public class KubernetesPodManager {
 
     // Pod 삭제
     try {
-      coreV1Api.deleteNamespacedPod(podName, NAMESPACE).execute();
+      coreV1Api.deleteNamespacedPod(podName, namespace).execute();
       log.info("기존 Pod 삭제 완료 - name: {}", podName);
       // Pod 삭제 대기 (최대 5초)
       Thread.sleep(5000);
@@ -274,7 +294,7 @@ public class KubernetesPodManager {
 
     // ConfigMap 삭제
     try {
-      coreV1Api.deleteNamespacedConfigMap(configMapName, NAMESPACE).execute();
+      coreV1Api.deleteNamespacedConfigMap(configMapName, namespace).execute();
       log.info("기존 ConfigMap 삭제 완료 - name: {}", configMapName);
     } catch (ApiException e) {
       if (e.getCode() != 404) {
@@ -286,16 +306,16 @@ public class KubernetesPodManager {
   /**
    * Pod 상태 확인
    */
-  public boolean isPodRunning(Long memberId, String symbol) {
+  public boolean isPodRunning(Long memberId, String symbol, Map<String, Object> strategyJson) {
     if (coreV1Api == null) {
       log.warn("Kubernetes API 사용 불가 - Pod 상태 확인 불가");
       return false;
     }
 
-    String podName = generatePodName(memberId, symbol);
+    String podName = generatePodName(memberId, symbol, strategyJson);
 
     try {
-      V1Pod pod = coreV1Api.readNamespacedPod(podName, NAMESPACE).execute();
+      V1Pod pod = coreV1Api.readNamespacedPod(podName, namespace).execute();
       String phase = pod.getStatus() != null ? pod.getStatus().getPhase() : "Unknown";
       log.info("Pod 상태 확인 - name: {}, phase: {}", podName, phase);
       return "Running".equals(phase);
@@ -310,16 +330,47 @@ public class KubernetesPodManager {
   }
 
   /**
-   * Pod 이름 생성: strategy-{memberId}-{symbol}
+   * Pod 이름 생성: strategy-{memberId}-{symbol}-{type}
+   * type: buy (매수만), sell (매도만), 또는 빈 문자열 (둘 다)
    */
-  private String generatePodName(Long memberId, String symbol) {
-    return String.format("strategy-%d-%s", memberId, symbol.toLowerCase());
+  private String generatePodName(Long memberId, String symbol, Map<String, Object> strategyJson) {
+    String suffix = determineSuffix(strategyJson);
+    if (suffix.isEmpty()) {
+      return String.format("strategy-%d-%s", memberId, symbol.toLowerCase());
+    }
+    return String.format("strategy-%d-%s-%s", memberId, symbol.toLowerCase(), suffix);
   }
 
   /**
-   * ConfigMap 이름 생성: strategy-code-{memberId}-{symbol}
+   * ConfigMap 이름 생성: strategy-code-{memberId}-{symbol}-{type}
    */
-  private String generateConfigMapName(Long memberId, String symbol) {
-    return String.format("strategy-code-%d-%s", memberId, symbol.toLowerCase());
+  private String generateConfigMapName(Long memberId, String symbol, Map<String, Object> strategyJson) {
+    String suffix = determineSuffix(strategyJson);
+    if (suffix.isEmpty()) {
+      return String.format("strategy-code-%d-%s", memberId, symbol.toLowerCase());
+    }
+    return String.format("strategy-code-%d-%s-%s", memberId, symbol.toLowerCase(), suffix);
+  }
+
+  /**
+   * 전략 JSON에서 buy/sell 여부를 확인하여 suffix 결정
+   * - buy만 있으면: "buy"
+   * - sell만 있으면: "sell"
+   * - 둘 다 있거나 없으면: ""
+   */
+  private String determineSuffix(Map<String, Object> strategyJson) {
+    if (strategyJson == null) {
+      return "";
+    }
+
+    boolean hasBuy = strategyJson.containsKey("buy") && strategyJson.get("buy") != null;
+    boolean hasSell = strategyJson.containsKey("sell") && strategyJson.get("sell") != null;
+
+    if (hasBuy && !hasSell) {
+      return "buy";
+    } else if (!hasBuy && hasSell) {
+      return "sell";
+    }
+    return ""; // 둘 다 있거나 둘 다 없으면 suffix 없음
   }
 }

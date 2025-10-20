@@ -8,7 +8,6 @@ public class OrderReqDto {
             Integer orderQuantity,
             BigDecimal orderPrice,
             String stockCode,
-            String orderType
-    ) {
+            String orderType) {
     }
 }

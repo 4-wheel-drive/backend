@@ -19,6 +19,24 @@ spring:
     database-platform: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.MariaDBDialect}
 server:
   port: 8081
+
+# Kubernetes 설정
+kubernetes:
+  namespace: backend
+  ecr-image: 618221165332.dkr.ecr.ap-northeast-2.amazonaws.com/strategy-runner:latest
+  image-pull-secret: ecr-secret
+
+# Kafka 설정
+kafka:
+  bootstrap-servers: my-cluster-kafka-bootstrap.kafka:9092
+
+# 서비스 URL 설정
+trading-service:
+  url: http://trading-service.backend:8082
+
+strategy-service:
+  url: http://strategy-service.backend:8081
+
 openai:
   api-key: ${OPENAI_API_KEY:}
   model: gpt-4o-mini
