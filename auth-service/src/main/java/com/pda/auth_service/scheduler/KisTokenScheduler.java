@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class KisTokenScheduler {
+
     private final KisAuthService kisAuthService;
     private final MemberRepository memberRepository;
     private final KisAdminConfig kisAdminConfig;
@@ -29,9 +30,12 @@ public class KisTokenScheduler {
         refreshKisTokens();
     }
 
-    @Scheduled(fixedRate = 86400000)
+    /**
+     * 매일 오전 3시(한국시간)에 회원 토큰 갱신
+     */
+    @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
     public void refreshKisTokens() {
-        log.info("KIS Token Refresh Scheduler 시작");
+        log.info("KIS Token Refresh Scheduler 시작 (Asia/Seoul)");
         try {
             List<Member> members = memberRepository.findAll();
 
@@ -57,26 +61,32 @@ public class KisTokenScheduler {
         }
     }
 
-    @Scheduled(fixedRate = 86400000)
+    /**
+     * 매일 오전 2시(한국시간)에 관리자 AccessToken 갱신
+     */
+    @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
     public void refreshAdminAccessToken() {
-        log.info("KIS Access-Token Scheduler 시작");
+        log.info("KIS Access-Token Scheduler 시작 (Asia/Seoul)");
         try {
-            KisTokenResponse response = kisAuthService.saveAdminAccessToken(
+            kisAuthService.saveAdminAccessToken(
                     kisAdminConfig.getAppkey(),
                     kisAdminConfig.getAppSecret());
+            log.info("Admin AccessToken 갱신 완료");
         } catch (Exception e) {
-            log.error("admin 토큰 발급 실패");
+            log.error("admin 토큰 발급 실패: {}", e.getMessage());
         }
     }
 
-    @Scheduled(fixedDelay = 6 * 60 * 60 * 1000)
+    /**
+     * 6시간마다(한국시간 기준) ApprovalKey 갱신
+     */
+    @Scheduled(cron = "0 0 */6 * * *", zone = "Asia/Seoul")
     public void refreshAdminApprovalToken() {
-        log.info("KIS ApprovalKey Refresh Scheduler 시작");
+        log.info("KIS ApprovalKey Refresh Scheduler 시작 (Asia/Seoul)");
         try {
             KisApprovalResponse response = kisAuthService.saveAdminApprovalToken(
                     kisAdminConfig.getAppkey(),
                     kisAdminConfig.getAppSecret());
-
             log.info("ApprovalKey 갱신 완료: {}", response.getApprovalKey());
         } catch (Exception e) {
             log.error("ApprovalKey 갱신 실패: {}", e.getMessage());
