@@ -220,14 +220,14 @@ public class KubernetesPodManager {
     volumeMount.setSubPath("strategy.py");
     container.setVolumeMounts(List.of(volumeMount));
 
-    // 리소스 제한 설정
+    // 리소스 제한 설정 (최적화: 실제 사용량 기반)
     V1ResourceRequirements resources = new V1ResourceRequirements();
     resources.setRequests(Map.of(
         "memory", io.kubernetes.client.custom.Quantity.fromString("128Mi"),
-        "cpu", io.kubernetes.client.custom.Quantity.fromString("100m")));
+        "cpu", io.kubernetes.client.custom.Quantity.fromString("50m")));
     resources.setLimits(Map.of(
-        "memory", io.kubernetes.client.custom.Quantity.fromString("512Mi"),
-        "cpu", io.kubernetes.client.custom.Quantity.fromString("500m")));
+        "memory", io.kubernetes.client.custom.Quantity.fromString("256Mi"),
+        "cpu", io.kubernetes.client.custom.Quantity.fromString("100m")));
     container.setResources(resources);
 
     spec.setContainers(List.of(container));
