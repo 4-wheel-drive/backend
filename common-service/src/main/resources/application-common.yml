@@ -6,10 +6,10 @@ spring:
     timeout: 2000
 
   datasource:
-    url: jdbc:mariadb://127.0.0.1:3307/modular1
-    driver-class-name: org.mariadb.jdbc.Driver
-    username: admin
-    password: admin1024
+    url: ${SPRING_DATASOURCE_URL}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.mariadb.jdbc.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
     hibernate:
