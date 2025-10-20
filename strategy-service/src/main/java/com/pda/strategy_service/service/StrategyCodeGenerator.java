@@ -14,13 +14,13 @@ import java.util.*;
 public class StrategyCodeGenerator {
 
   private Set<String> timeframes;
-  private int memberId;
+  private Long memberId;
   private String symbol;
 
   /**
    * 전략 JSON → Python 코드 생성
    */
-  public String generateCode(Map<String, Object> strategyJson, int memberId, String symbol) {
+  public String generateCode(Map<String, Object> strategyJson, Long memberId, String symbol) {
     this.timeframes = analyzeTimeframes(strategyJson);
     this.memberId = memberId;
     this.symbol = symbol;

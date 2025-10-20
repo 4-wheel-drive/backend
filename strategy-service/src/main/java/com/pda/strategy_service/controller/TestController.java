@@ -50,7 +50,7 @@ public class TestController {
   @GetMapping("/strategies/{strategyId}/code")
   public Map<String, Object> generateCode(
       @PathVariable Long strategyId,
-      @RequestParam(defaultValue = "1") int memberId,
+      @RequestParam(defaultValue = "1L") Long memberId,
       @RequestParam(defaultValue = "005930") String symbol) {
 
     CustomStrategy customStrategy = customStrategyRepository.findByStrategyId(strategyId);
@@ -75,7 +75,7 @@ public class TestController {
   @PostMapping("/strategies/{strategyId}/run")
   public Map<String, Object> runStrategy(
       @PathVariable Long strategyId,
-      @RequestParam(defaultValue = "1") int memberId,
+      @RequestParam(defaultValue = "1") Long memberId,
       @RequestParam(defaultValue = "005930") String symbol) {
 
     log.info("🧪 테스트: 전략 실행 - strategyId: {}, memberId: {}, symbol: {}", strategyId, memberId, symbol);
