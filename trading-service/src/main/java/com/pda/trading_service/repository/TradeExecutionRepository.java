@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TradeExecutionRepository extends JpaRepository<TradeExecution, Long> {
     List<TradeExecution> findAllByStockOrder(StockOrder stockOrder);
 
-    Optional<StockOrder> findByStockOrder(StockOrder stockOrder);
+    Optional<TradeExecution> findByStockOrder(StockOrder stockOrder);
 }
