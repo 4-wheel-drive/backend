@@ -1,5 +1,6 @@
 package com.pda.auth_service.controller;
 
+import com.pda.auth_service.service.TokenCookieManager;
 import com.pda.common_service.response.ApiResponse;
 import com.pda.common_service.response.ResponseMessage;
 import com.pda.auth_service.controller.dto.AuthRequest;
@@ -49,6 +50,19 @@ public class AuthController {
                 .body(ApiResponse.success(
                         ResponseMessage.SIGNUP_SUCCESS.getCode(),
                         ResponseMessage.SIGNUP_SUCCESS.getMessage()
+                ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Object>> logout() {
+        ResponseCookie responseCookie = TokenCookieManager.deleteCookie();
+
+        return ResponseEntity
+                .ok()
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .body(ApiResponse.success(
+                        ResponseMessage.LOGOUT_SUCCESS.getCode(),
+                        ResponseMessage.LOGOUT_SUCCESS.getMessage()
                 ));
     }
 }

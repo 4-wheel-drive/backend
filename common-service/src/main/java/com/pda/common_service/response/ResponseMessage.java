@@ -26,6 +26,7 @@ public enum ResponseMessage {
     LOGIN_FAIL("LOGIN-FAIL", "로그인을 실패했습니다."),
     ISSUE_KIS_APPROVAL_KEY_FAIL("ISSUE_APPROVAL_KEY_FAIL", "KIS 웹소켓 키 발급을 실패했습니다"),
     ISSUE_KIS_ACCESS_TOKEN_FAIL("ISSUE_KIS_ACCESS_TOKEN_FAIL", "KIS 접근 토큰 발급을 실패했습니다."),
+    LOGOUT_SUCCESS("LOGOUT_SUCCESS", "로그아웃을 성공했습니다."),
 
     /**
      * strategy
@@ -37,8 +38,6 @@ public enum ResponseMessage {
     STRATEGY_SAVE_SUCCESS("STRATEGY-SAVE-SUCCESS", "전략 저장에 성공했습니다."),
     STRATEGY_DELETE_SUCCESS("STRATEGY_DELETE_SUCCESS", "전략 삭제를 성공했습니다."),
     GET_STRATEGY_MEMBER_SUCCESS("GET_STRATEGY_MEMBER_SUCCESS", "전략의 유저 조회를 성공했습니다."),
-
-
 
     /**
      * strategy templates
@@ -52,7 +51,6 @@ public enum ResponseMessage {
     STRATEGY_TEMPLATE_FORCE_REINITIALIZE_FAILED("STRATEGY-TEMPLATE-FORCE-REINITIALIZE-FAILED",
             "전략 템플릿 강제 재초기화에 실패했습니다."),
     GET_STRATEGY_TEMPLATES("GET_STRATEGY_TEMPLATES", "원클릭 템플릿 조회를 성공했습니다."),
-
 
     /**
      * trade

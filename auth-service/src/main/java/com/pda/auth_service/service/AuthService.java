@@ -7,5 +7,4 @@ public interface AuthService {
     ResponseCookie login(String id, String password);
 
     void signUp(AuthRequest.SignUp signUpRequest);
-
 }
