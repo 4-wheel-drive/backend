@@ -18,6 +18,42 @@ public class StrategyCodeGenerator {
   private String symbol;
 
   /**
+   * 안전한 숫자 변환 (String/Number → int)
+   */
+  private int safeToInt(Object value, int defaultValue) {
+    if (value == null)
+      return defaultValue;
+    if (value instanceof Number)
+      return ((Number) value).intValue();
+    if (value instanceof String) {
+      try {
+        return Integer.parseInt((String) value);
+      } catch (NumberFormatException e) {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
+  }
+
+  /**
+   * 안전한 숫자 변환 (String/Number → double)
+   */
+  private double safeToDouble(Object value, double defaultValue) {
+    if (value == null)
+      return defaultValue;
+    if (value instanceof Number)
+      return ((Number) value).doubleValue();
+    if (value instanceof String) {
+      try {
+        return Double.parseDouble((String) value);
+      } catch (NumberFormatException e) {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
+  }
+
+  /**
    * 전략 JSON → Python 코드 생성
    */
   public String generateCode(Map<String, Object> strategyJson, int memberId, String symbol) {
@@ -38,7 +74,7 @@ public class StrategyCodeGenerator {
       Map<String, Object> node = (Map<String, Object>) buyConfig.get("node");
       buyNode = node;
       buyQuantity = buyConfig.containsKey("orderQuantity")
-          ? ((Number) buyConfig.get("orderQuantity")).intValue()
+          ? safeToInt(buyConfig.get("orderQuantity"), 0)
           : 0;
     }
 
@@ -49,7 +85,7 @@ public class StrategyCodeGenerator {
       Map<String, Object> node = (Map<String, Object>) sellConfig.get("node");
       sellNode = node;
       sellQuantity = sellConfig.containsKey("orderQuantity")
-          ? ((Number) sellConfig.get("orderQuantity")).intValue()
+          ? safeToInt(sellConfig.get("orderQuantity"), 0)
           : 0;
     }
 
@@ -116,7 +152,7 @@ public class StrategyCodeGenerator {
         REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
         REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
         KAFKA_BROKERS = os.getenv("KAFKA_BROKERS", "my-cluster-kafka-bootstrap.kafka:9092")
-        TRADING_SERVICE_URL = os.getenv("TRADING_SERVICE_URL", "http://trading-service.backend:8080")
+        TRADING_SERVICE_URL = os.getenv("TRADING_SERVICE_URL", "http://trading-service.backend:8082")
         STRATEGY_SERVICE_URL = os.getenv("STRATEGY_SERVICE_URL", "http://strategy-service.backend:8081")
 
         print("=" * 60)
@@ -159,9 +195,16 @@ public class StrategyCodeGenerator {
     }
 
     if (!kafkaTfs.isEmpty()) {
-      List<String> topics = kafkaTfs.stream()
-          .map(tf -> String.format("'indicators.%s.%s'", symbol, tf))
-          .toList();
+      List<String> topics = new ArrayList<>();
+      for (String tf : kafkaTfs) {
+        // candles 토픽 (모든 타임프레임)
+        topics.add(String.format("'candles.%s.%s'", symbol, tf));
+
+        // indicators 토픽 (tick 제외)
+        if (!"tick".equals(tf)) {
+          topics.add(String.format("'indicators.%s.%s'", symbol, tf));
+        }
+      }
       String topicsStr = "[" + String.join(", ", topics) + "]";
       code.append(String.format("""
 
@@ -201,11 +244,45 @@ public class StrategyCodeGenerator {
                     data = redis_client.lindex(f"C:{SYMBOL}:1d", -(lookback + 1))
                     return float(json.loads(data).get(key, 0)) if data else None
                 except: return None
+            elif timeframe == "tick":
+                # tick 타임프레임은 OHLC가 아닌 price 필드 사용
+                candles_topic = f"candles.{SYMBOL}.tick"
+                cache = prev_data.get(f"prev_tick", {}) if lookback > 0 else latest_data.get(candles_topic, {})
+
+                if not cache:
+                    return None
+
+                # tick 데이터는 open/high/low/close 모두 price로 매핑
+                if field in ['open', 'high', 'low', 'close']:
+                    return float(cache.get('price', 0)) if cache.get('price') else None
+                elif field == 'volume':
+                    return float(cache.get('volume', 0)) if cache.get('volume') else None
+                else:
+                    return float(cache.get(field, 0)) if cache.get(field) else None
             else:
-                cache = prev_data.get(f"prev_{timeframe}", {}) if lookback > 0 else latest_data.get(f"indicators.{SYMBOL}.{timeframe}", {})
-                return float(cache.get(key, 0)) if cache.get(key) else None
+                # 먼저 candles 토픽에서 시도
+                candles_topic = f"candles.{SYMBOL}.{timeframe}"
+                indicators_topic = f"indicators.{SYMBOL}.{timeframe}"
+
+                cache = None
+                if lookback > 0:
+                    cache = prev_data.get(f"prev_{timeframe}", {})
+                else:
+                    # candles 토픽에서 데이터 찾기
+                    candles_data = latest_data.get(candles_topic, {})
+                    if candles_data and key in candles_data:
+                        cache = candles_data
+                    else:
+                        # candles에 없으면 indicators 토픽에서 찾기
+                        cache = latest_data.get(indicators_topic, {})
+
+                return float(cache.get(key, 0)) if cache and cache.get(key) else None
 
         def get_indicator(name, period, timeframe, subfield=None, lookback=0):
+            # tick 타임프레임에서는 지표 계산 불가
+            if timeframe == "tick":
+                return None
+
             if name == "BOLLINGER_BANDS":
                 ind_key = f"bb_{period}_{subfield}" if subfield else f"bb_{period}_middle"
             elif name == "BOLLINGER_BANDWIDTH" or name == "BOLLINGER_BANDSWIDTH":
@@ -234,11 +311,19 @@ public class StrategyCodeGenerator {
                         return float(val) if val else None
                 except: return None
             else:
-                cache = prev_data.get(f"prev_{timeframe}", {}) if lookback > 0 else latest_data.get(f"indicators.{SYMBOL}.{timeframe}", {})
+                # indicators 토픽에서 데이터 찾기
+                indicators_topic = f"indicators.{SYMBOL}.{timeframe}"
+
+                cache = None
+                if lookback > 0:
+                    cache = prev_data.get(f"prev_{timeframe}", {})
+                else:
+                    cache = latest_data.get(indicators_topic, {})
+
                 if name == "BOLLINGER_BANDS" and subfield:
                     kafka_key = f"bb_{subfield}"
-                    return float(cache.get(kafka_key, 0)) if cache.get(kafka_key) else None
-                return float(cache.get(ind_key, 0)) if cache.get(ind_key) else None
+                    return float(cache.get(kafka_key, 0)) if cache and cache.get(kafka_key) else None
+                return float(cache.get(ind_key, 0)) if cache and cache.get(ind_key) else None
 
         def get_profit_loss(field="percent"):
             try:
@@ -346,7 +431,25 @@ public class StrategyCodeGenerator {
       String leftExpr = valToExpr(left, 0);
       String rightExpr = valToExpr(right, 0);
       String operator = (String) node.getOrDefault("operator", ">");
-      return String.format("(%s %s %s)", leftExpr, operator, rightExpr);
+
+      // CONSTANT는 항상 값이 있으므로 None 체크 제외
+      boolean leftIsConstant = "CONSTANT".equals(left.get("kind"));
+      boolean rightIsConstant = "CONSTANT".equals(right.get("kind"));
+
+      if (leftIsConstant && rightIsConstant) {
+        // 둘 다 상수면 None 체크 불필요
+        return String.format("(%s %s %s)", leftExpr, operator, rightExpr);
+      } else if (leftIsConstant) {
+        // 왼쪽만 상수
+        return String.format("(%s is not None and (%s %s %s))", rightExpr, leftExpr, operator, rightExpr);
+      } else if (rightIsConstant) {
+        // 오른쪽만 상수
+        return String.format("(%s is not None and (%s %s %s))", leftExpr, leftExpr, operator, rightExpr);
+      } else {
+        // 둘 다 변수/함수 호출이면 둘 다 체크
+        return String.format("((%s is not None and %s is not None) and (%s %s %s))",
+            leftExpr, rightExpr, leftExpr, operator, rightExpr);
+      }
     } else if ("CROSS".equals(ntype)) {
       String direction = (String) node.get("direction");
       @SuppressWarnings("unchecked")
@@ -359,10 +462,14 @@ public class StrategyCodeGenerator {
       String r0 = valToExpr(rightNode, 0);
       String r1 = valToExpr(rightNode, 1);
 
+      // None 체크 추가: 모든 값이 None이 아닐 때만 비교
+      String noneCheck = String.format("(%s is not None and %s is not None and %s is not None and %s is not None)",
+          l0, l1, r0, r1);
+
       if ("UP".equals(direction)) {
-        return String.format("((%s <= %s) and (%s > %s))", l1, r1, l0, r0);
+        return String.format("(%s and (%s <= %s) and (%s > %s))", noneCheck, l1, r1, l0, r0);
       } else {
-        return String.format("((%s >= %s) and (%s < %s))", l1, r1, l0, r0);
+        return String.format("(%s and (%s >= %s) and (%s < %s))", noneCheck, l1, r1, l0, r0);
       }
     }
 
@@ -378,24 +485,24 @@ public class StrategyCodeGenerator {
     if ("PRICE".equals(kind)) {
       String field = (String) node.get("field");
       String tf = (String) node.getOrDefault("timeframe", "1d");
-      int lb = lookback + ((Number) node.getOrDefault("lookback", 0)).intValue();
+      int lb = lookback + safeToInt(node.getOrDefault("lookback", 0), 0);
       return String.format("get_price('%s', '%s', %d)", field, tf, lb);
     } else if ("INDICATOR".equals(kind)) {
       String name = (String) node.get("name");
       @SuppressWarnings("unchecked")
       Map<String, Object> args = (Map<String, Object>) node.getOrDefault("args", new HashMap<>());
-      int period = ((Number) args.getOrDefault("period", 20)).intValue();
+      int period = safeToInt(args.getOrDefault("period", 20), 20);
       String tf = (String) node.getOrDefault("timeframe", "1d");
       String sub = (String) node.get("subfield");
-      int lb = lookback + ((Number) node.getOrDefault("lookback", 0)).intValue();
+      int lb = lookback + safeToInt(node.getOrDefault("lookback", 0), 0);
       String subStr = sub != null ? String.format("'%s'", sub) : "None";
       return String.format("get_indicator('%s', %d, '%s', %s, %d)", name, period, tf, subStr, lb);
     } else if ("CONSTANT".equals(kind)) {
       @SuppressWarnings("unchecked")
       Map<String, Object> constant = (Map<String, Object>) node.get("constant");
-      Number val = (Number) constant.get("value");
+      double val = safeToDouble(constant.get("value"), 0.0);
       String unit = (String) constant.get("unit");
-      double value = "percent".equals(unit) ? val.doubleValue() / 100.0 : val.doubleValue();
+      double value = "percent".equals(unit) ? val / 100.0 : val;
       return String.valueOf(value);
     } else if ("PROFIT_AND_LOSS".equals(kind)) {
       String field = (String) node.getOrDefault("profit_and_loss_field", "percent");
@@ -403,7 +510,7 @@ public class StrategyCodeGenerator {
     } else if ("LEVEL".equals(kind)) {
       String levelName = (String) node.get("level_name");
       String tf = (String) node.getOrDefault("timeframe", "1d");
-      int lb = lookback + ((Number) node.getOrDefault("lookback", 0)).intValue();
+      int lb = lookback + safeToInt(node.getOrDefault("lookback", 0), 0);
       return String.format("get_level('%s', '%s', %d)", levelName, tf, lb);
     } else if ("EXPRESSION".equals(kind) || node.containsKey("operator")) {
       @SuppressWarnings("unchecked")
@@ -417,7 +524,10 @@ public class StrategyCodeGenerator {
       String leftExpr = valToExpr(left, lookback);
       String rightExpr = valToExpr(right, lookback);
       String op = (String) expr.get("operator");
-      return String.format("(%s %s %s)", leftExpr, op, rightExpr);
+
+      // None 체크 추가: 산술 연산 시 None이면 0으로 처리
+      return String.format("((%s if %s is not None else 0) %s (%s if %s is not None else 0))",
+          leftExpr, leftExpr, op, rightExpr, rightExpr);
     }
 
     return "0";
@@ -428,6 +538,22 @@ public class StrategyCodeGenerator {
    */
   private String genOrderSender() {
     return """
+        def stop_strategy():
+            try:
+                resp = requests.post(
+                    f"{STRATEGY_SERVICE_URL}/api/v1/strategies/{STRATEGY_ID}/stop",
+                    params={"memberId": MEMBER_ID},
+                    timeout=10
+                )
+                if resp.status_code in [200, 201]:
+                    print(f"✅ 전략 중지 API 호출 성공")
+                    return True
+                print(f"⚠️ 전략 중지 API 실패: {resp.status_code}")
+                return False
+            except Exception as e:
+                print(f"⚠️ 전략 중지 API 오류: {e}")
+                return False
+
         def send_buy_order(qty, price=0):
             try:
                 resp = requests.post(
@@ -504,12 +630,25 @@ public class StrategyCodeGenerator {
 
                       topic = msg.topic()
                       data = json.loads(msg.value().decode('utf-8'))
-                      tf = topic.split('.')[-1]
 
+                      # 토픽 파싱: candles.005930.1m 또는 indicators.005930.1m
+                      topic_parts = topic.split('.')
+                      topic_type = topic_parts[0]  # candles 또는 indicators
+                      tf = topic_parts[-1]         # 타임프레임
+
+                      # 이전 데이터 백업
                       prev_data[f"prev_{tf}"] = latest_data.get(topic, {})
                       latest_data[topic] = data
 
-                      print(f"📨 [{topic}] {data.get('t', 'N/A')}")
+                      # 메시지 타입에 따른 처리
+                      if topic_type == "candles":
+                          # tick 타임프레임은 'tick_time', 나머지는 't' 필드 사용
+                          time_field = data.get('tick_time' if tf == 'tick' else 't', 'N/A')
+                          print(f"📊 [{topic}] 봉 데이터: {time_field}")
+                      elif topic_type == "indicators":
+                          print(f"📈 [{topic}] 지표 데이터: {data.get('t', 'N/A')}")
+                      else:
+                          print(f"📨 [{topic}] {data.get('t', 'N/A')}")
 
           """);
 
@@ -517,7 +656,10 @@ public class StrategyCodeGenerator {
         code.append(String.format("""
                         if check_buy_signal():
                             print("🟢 매수 신호!")
-                            send_buy_order(%d)
+                            if send_buy_order(%d):
+                                print("✅ 매수 완료")
+                                stop_strategy()
+                                break
 
             """, buyQty));
       }
@@ -526,7 +668,10 @@ public class StrategyCodeGenerator {
         code.append(String.format("""
                         if check_sell_signal():
                             print("🔴 매도 신호!")
-                            send_sell_order(%d)
+                            if send_sell_order(%d):
+                                print("✅ 매도 완료")
+                                stop_strategy()
+                                break
 
             """, sellQty));
       }
@@ -541,7 +686,10 @@ public class StrategyCodeGenerator {
         code.append(String.format("""
                         if check_buy_signal():
                             print("🟢 매수 신호!")
-                            send_buy_order(%d)
+                            if send_buy_order(%d):
+                                print("✅ 매수 완료")
+                                stop_strategy()
+                                break
             """, buyQty));
       }
 
@@ -549,7 +697,10 @@ public class StrategyCodeGenerator {
         code.append(String.format("""
                         if check_sell_signal():
                             print("🔴 매도 신호!")
-                            send_sell_order(%d)
+                            if send_sell_order(%d):
+                                print("✅ 매도 완료")
+                                stop_strategy()
+                                break
             """, sellQty));
       }
 
