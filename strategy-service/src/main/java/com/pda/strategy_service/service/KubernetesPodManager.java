@@ -231,7 +231,7 @@ public class KubernetesPodManager {
         "memory", io.kubernetes.client.custom.Quantity.fromString("128Mi"),
         "cpu", io.kubernetes.client.custom.Quantity.fromString("50m")));
     resources.setLimits(Map.of(
-        "memory", io.kubernetes.client.custom.Quantity.fromString("256Mi"),
+        "memory", io.kubernetes.client.custom.Quantity.fromString("512Mi"),
         "cpu", io.kubernetes.client.custom.Quantity.fromString("100m")));
     container.setResources(resources);
 
