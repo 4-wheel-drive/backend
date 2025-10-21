@@ -11,10 +11,12 @@ import com.pda.trading_service.repository.TradeExecutionRepository;
 import com.pda.trading_service.service.kis.KisTradeExecutionService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -30,11 +32,18 @@ public class TradeExecutionCommitScheduler {
     private final KisTradeExecutionService kisTradeExecutionService;
     private final StrategyModuleClient strategyModuleClient;
 
-    /**
-     * 매 1분마다 CREATED 주문을 조회해서 체결 상태 확인 후 저장
-     */
-    @Scheduled(cron = "0 * * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 */2 * * * *", zone = "Asia/Seoul")
     public void executeTradeCheck() {
+        LocalTime now = LocalTime.now(ZoneId.of("Asia/Seoul"));
+        LocalTime marketOpen = LocalTime.of(9, 0);
+        LocalTime marketClose = LocalTime.of(15, 40);
+
+        // 장 시간 외에는 스케줄 종료
+        if (now.isBefore(marketOpen) || now.isAfter(marketClose)) {
+            log.info("⏸ 장외 시간 ({}), 체결 확인 스킵", now);
+            return;
+        }
+
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
@@ -60,31 +69,34 @@ public class TradeExecutionCommitScheduler {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleSingleOrder(StockOrder order, LocalDate today) {
         try {
+            if (tradeExecutionRepository.findByStockOrder(order).isPresent()) {
+                log.debug("⏸ 주문({}) 이미 체결 정보 존재 → 스킵", order.getTradeId());
+                return;
+            }
+
             StrategyWithMemberDto strategyInfo = strategyModuleClient.getStrategyInfo(order.getStrategyId());
             TradeExecution execution = kisTradeExecutionService.checkTradeExecution(order, today, strategyInfo);
 
             if (execution == null) {
-                log.debug("⏸주문({}) 미체결 상태 → 스킵", order.getTradeId());
+                log.debug("⏸ 주문({}) 미체결 상태 → 스킵", order.getTradeId());
                 return;
             }
 
-            // 이미 동일 주문번호로 체결된 건 중복 방지
-            boolean exists = tradeExecutionRepository.findByStockOrder(order).isPresent();
-            if (exists) {
-                log.info("주문({}) 이미 체결 처리됨 → 스킵", order.getTradeId());
-                return;
-            }
-
-            // 체결 정보 저장
+            execution.setStockOrder(order);
             tradeExecutionRepository.save(execution);
+            log.info("💾 주문({}) 체결 정보 저장 완료", order.getTradeId());
 
             if (execution.getStatus() == TradeExecutionStatus.FILLED) {
                 order.updateStatus(OrderStatus.FILLED);
                 stockOrderRepository.save(order);
-                log.info("주문({}) 완전 체결 완료 (수량: {})", order.getTradeId(), execution.getQuantity());
+                log.info("주문({}) 완전 체결 (수량: {})", order.getTradeId(), execution.getQuantity());
             }
+
+        } catch (DataIntegrityViolationException e) {
+            log.warn("⚠️ 주문({}) 중복 체결 감지(DB 유니크 제약)", order.getTradeId());
         } catch (Exception e) {
-            log.error("주문({}) 체결 확인 중 오류: {}", order.getTradeId(), e.getMessage(), e);
+            log.error("❌ 주문({}) 체결 확인 중 오류: {}", order.getTradeId(), e.getMessage(), e);
         }
     }
+
 }
