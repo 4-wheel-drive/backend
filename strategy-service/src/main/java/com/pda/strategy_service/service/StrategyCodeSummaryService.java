@@ -28,53 +28,74 @@ public class StrategyCodeSummaryService {
 
     public String generateSummary(String strategyCode, Map<String, Object> strategyJson) {
         try {
+            String strategyName = (String) strategyJson.getOrDefault("strategy_name", "");
+            String stockCode = (String) strategyJson.getOrDefault("stock_code", "");
+            String summary = (String) strategyJson.getOrDefault("summary",
+                    (String) strategyJson.getOrDefault("description", ""));
+
+            StringBuilder metaInfo = new StringBuilder();
+            if (!strategyName.isEmpty()) {
+                metaInfo.append("# 전략 이름: ").append(strategyName).append("\n");
+            }
+            if (!stockCode.isEmpty()) {
+                metaInfo.append("# 종목: ").append(stockCode).append("\n");
+            }
+            if (!summary.isEmpty()) {
+                metaInfo.append("# 로직 요약: ").append(summary).append("\n");
+            }
+
             String prompt = """
-                    너는 Python 자동매매 전략 코드 리팩토링 전문가야.
-                    
-                    아래 전략 코드를 **현실감 있는 수도코드 스타일**로 재구성해줘.  
-                    코드는 실제로 실행되지 않아도 되지만, 각 함수가 무슨 일을 하는지 흐름이 코드만 봐도 이해되게 작성해라.
-                    
-                    🎯 리팩토링 기준
-                    - import, 설정, 환경변수, logger, try/except, print 등은 제거
-                    - 함수 내부는 단순 pass 대신, 동작 의도를 드러내는 구체적 호출 형태로 표현
-                      예: `return fetch_market_price(symbol, field, timeframe)`  
-                           `return send_trading_request("BUY", symbol, qty)`
-                    - 불필요한 주석은 전부 제거, 코드 상단의 전략 요약만 남김
-                    - 코드 외부의 설명이나 분석 문장은 절대 작성하지 말 것
-                    - 실행 흐름은 다음 순서를 따라야 함:
-                      가격 확인 → 지표 확인 → 조건 판단 → 주문 실행 → 전략 중지
-                    - 함수 이름은 원본 구조(get_price, get_indicator, check_buy_signal, send_order, main 등)를 유지
-                    - 포트, IP, URL, 토큰 등 민감 정보는 <REDACTED> 처리 또는 생략
-                    
-                    💡 strategyJson 기반 상단 주석 구성
-                    - JSON에 존재하는 경우만 아래 항목 포함:
-                      # 전략 이름:
-                      # 종목:
-                      # 로직 요약:
-                      # 알고리즘 흐름:
-                    
-                    📘 입력 코드:
-                    """ + strategyCode + "\n\n📘 전략 정보(JSON):\n" + strategyJson;
+                    너는 Python 자동매매 전략을 **전략의 흐름이 명확하게 드러나도록 수도코드 형태로 리팩토링하는 전문가**야.
+
+                    아래 JSON과 코드는 사용자가 만든 실제 자동매매 전략이야.  
+                    이걸 기반으로, **사람이 읽어서 전략의 의도를 바로 이해할 수 있는 수도코드**를 만들어줘.
+
+                    ✣️ 작성 기준
+
+                    - 코드는 **전략의 의사결정 흐름 중심**으로 작성할 것.  
+                      (가격 확인 → 지표 확인 → 조건 판단 → 주문 실행 → 전략 종료)
+
+                    - Kafka, Redis, API, WebSocket, 데이터 파싱 등 기술적 구현은 **완전히 제거**하고,  
+                      그 역할은 "무엇을 한다"가 명확히 드러나는 추상적 함수명으로 표현해라.  
+                      예: kafka_consumer.poll() → get_latest_market_info()
+
+                    - 단순하고 추상적인 이름(initialize_strategy, fetch_market_data, execute_order)은 절대 사용하지 마라.  
+                      대신 **전략의 조건이나 의도를 직접 드러내는 함수명**을 사용해라.  
+                      예:
+                        ❌ is_condition_met() → ✅ is_price_below_100k_and_rsi_below_30()  
+                        ❌ execute_order() → ✅ place_buy_order_if_signal_detected()
+
+                    - 함수명은 **비전공자도 읽으면 의미를 이해할 수 있게** 구체적으로 작성해야 한다.  
+                      함수 하나하나가 "무엇을 판단하거나 수행하는지" 바로 알 수 있어야 한다.
+
+                    - 코드 내부에는 **절대로 절대로 절대로 주석을 작성하지 않는다.**  
+                      오직 코드 상단에 JSON 기반으로 생성된 전략 요약 주석만 포함한다.
+
+                    - import, print, try/except, logger, 포트, URL, 토큰 등 민감한 요소는 전부 제거.
+                    - 코드 외부의 설명, 분석 문장 없이 **오직 코드만 출력.**
+
+                    - 필요 시 전략의 조건을 반영해 세부 함수명을 구성할 것.  
+                      예를 들어 JSON에 "RSI 30 이하" 조건이 있다면  
+                      함수명에 `rsi_below_30` 같은 단어를 직접 포함시켜라.
+
+                    💡 전략 정보 (JSON 기반 메타데이터):
+                    """ + metaInfo + """
+
+                    📘 목록 전력 코드:
+                    """ + strategyCode;
 
             ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                    .model(ChatModel.GPT_4O_MINI)
+                    .model(ChatModel.GPT_4O)
                     .addUserMessage(prompt)
-                    .temperature(0.3)
-                    .maxCompletionTokens(800)
+                    .temperature(0.2)
+                    .maxCompletionTokens(1000)
                     .build();
 
-            ChatCompletion completion = openAIClient.chat()
-                    .completions()
-                    .create(params);
+            ChatCompletion completion = openAIClient.chat().completions().create(params);
 
-            String result = completion.choices().get(0).message().content().orElse("").trim();
-
-            String cleaned = result
+            return completion.choices().get(0).message().content().orElse("").trim()
                     .replaceAll("(?s)```python", "")
-                    .replaceAll("(?s)```", "")
-                    .trim();
-
-            return cleaned;
+                    .replaceAll("(?s)```", "").trim();
 
         } catch (Exception e) {
             log.error("코드 요약 생성 실패", e);
