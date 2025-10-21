@@ -1,4 +1,6 @@
 package com.pda.strategy_service.domain.dto;
 
-public record SimpleStrategy(Long id, String strategyName) {
+import com.pda.strategy_service.domain.StrategyActivatedStatus;
+
+public record SimpleStrategy(Long id, String strategyName, StrategyActivatedStatus strategyActivatedStatus) {
 }
