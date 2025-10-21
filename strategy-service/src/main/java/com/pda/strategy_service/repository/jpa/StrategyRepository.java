@@ -12,4 +12,6 @@ public interface StrategyRepository extends JpaRepository<Strategy, Long> {
     List<Strategy> findAllByMemberId(Long memberId);
     List<Strategy> findAllByMemberAndStrategyExistedStatus(Member member, StrategyExistedStatus status);
     Optional<Strategy> findByIdAndStrategyExistedStatus(Long strategyId, StrategyExistedStatus status);
+    List<Strategy> findAllByMemberAndStrategyExistedStatusOrderByCreatedAtDesc(Member member,
+                                                                               StrategyExistedStatus status);
 }

@@ -57,7 +57,7 @@ public class StrategyServiceImpl implements StrategyService {
     public ReadStrategies getStrategies(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ResponseMessage.MEMBER_NOT_FOUND));
-        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatus(
+        List<Strategy> strategies = strategyRepository.findAllByMemberAndStrategyExistedStatusOrderByCreatedAtDesc(
                 member,
                 StrategyExistedStatus.EXISTED
         );
