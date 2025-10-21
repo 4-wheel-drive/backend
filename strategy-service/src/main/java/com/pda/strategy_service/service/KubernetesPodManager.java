@@ -71,19 +71,21 @@ public class KubernetesPodManager {
   /**
    * 전략 실행 Pod 생성
    * 
-   * @param strategyId   전략 ID
-   * @param memberId     회원 ID
-   * @param pythonCode   실행할 Python 코드
-   * @param symbol       종목 코드
-   * @param strategyJson 전략 JSON (buy/sell 정보 포함)
+   * @param strategyId      전략 ID
+   * @param memberId        회원 ID
+   * @param pythonCode      실행할 Python 코드
+   * @param symbol          종목 코드
+   * @param strategyJson    전략 JSON (buy/sell 정보 포함)
+   * @param mongoStrategyId MongoDB의 전략 UUID (유니크성 보장)
    * @return Pod 이름
    */
   public String createStrategyPod(Long strategyId, Long memberId, String pythonCode, String symbol,
-      Map<String, Object> strategyJson) {
-    log.info("전략 Pod 생성 시작 - strategyId: {}, memberId: {}, symbol: {}", strategyId, memberId, symbol);
+      Map<String, Object> strategyJson, String mongoStrategyId) {
+    log.info("전략 Pod 생성 시작 - strategyId: {}, memberId: {}, symbol: {}, mongoId: {}",
+        strategyId, memberId, symbol, mongoStrategyId);
 
-    String podName = generatePodName(memberId, symbol, strategyJson);
-    String configMapName = generateConfigMapName(memberId, symbol, strategyJson);
+    String podName = generatePodName(strategyJson, memberId, symbol, mongoStrategyId);
+    String configMapName = generateConfigMapName(strategyJson, memberId, symbol, mongoStrategyId);
 
     try {
       // 1. 기존 리소스 정리 (있다면)
@@ -106,21 +108,23 @@ public class KubernetesPodManager {
   /**
    * 전략 실행 Pod 삭제
    * 
-   * @param memberId     회원 ID
-   * @param symbol       종목 코드
-   * @param strategyJson 전략 JSON (buy/sell 정보 포함)
+   * @param memberId        회원 ID
+   * @param symbol          종목 코드
+   * @param strategyJson    전략 JSON (buy/sell 정보 포함)
+   * @param mongoStrategyId MongoDB의 전략 UUID (유니크성 보장)
    */
-  public void deleteStrategyPod(Long memberId, String symbol, Map<String, Object> strategyJson) {
-    log.info("전략 Pod 삭제 시작 - memberId: {}, symbol: {}", memberId, symbol);
+  public void deleteStrategyPod(Long memberId, String symbol, Map<String, Object> strategyJson,
+      String mongoStrategyId) {
+    log.info("전략 Pod 삭제 시작 - memberId: {}, symbol: {}, mongoId: {}", memberId, symbol, mongoStrategyId);
 
-    String podName = generatePodName(memberId, symbol, strategyJson);
-    String configMapName = generateConfigMapName(memberId, symbol, strategyJson);
+    String podName = generatePodName(strategyJson, memberId, symbol, mongoStrategyId);
+    String configMapName = generateConfigMapName(strategyJson, memberId, symbol, mongoStrategyId);
 
     try {
       cleanupExistingResources(podName, configMapName);
       log.info("전략 Pod 삭제 완료 - podName: {}", podName);
     } catch (Exception e) {
-      log.error("전략 Pod 삭제 실패 - memberId: {}, symbol: {}, error: {}", memberId, symbol, e.getMessage(), e);
+      log.error("전략 Pod 삭제 실패 - mongoId: {}, podName: {}, error: {}", mongoStrategyId, podName, e.getMessage(), e);
       throw new RuntimeException("전략 Pod 삭제 실패: " + e.getMessage(), e);
     }
   }
@@ -210,7 +214,8 @@ public class KubernetesPodManager {
         createEnvVar("REDIS_PORT", redisPort),
         createEnvVar("REDIS_PASSWORD", redisPassword),
         createEnvVar("TRADING_SERVICE_URL", tradingServiceUrl),
-        createEnvVar("STRATEGY_SERVICE_URL", strategyServiceUrl));
+        createEnvVar("STRATEGY_SERVICE_URL", strategyServiceUrl),
+        createEnvVar("TZ", "Asia/Seoul"));
     container.setEnv(envVars);
 
     // Volume Mount 설정
@@ -306,13 +311,13 @@ public class KubernetesPodManager {
   /**
    * Pod 상태 확인
    */
-  public boolean isPodRunning(Long memberId, String symbol, Map<String, Object> strategyJson) {
+  public boolean isPodRunning(Long memberId, String symbol, Map<String, Object> strategyJson, String mongoStrategyId) {
     if (coreV1Api == null) {
       log.warn("Kubernetes API 사용 불가 - Pod 상태 확인 불가");
       return false;
     }
 
-    String podName = generatePodName(memberId, symbol, strategyJson);
+    String podName = generatePodName(strategyJson, memberId, symbol, mongoStrategyId);
 
     try {
       V1Pod pod = coreV1Api.readNamespacedPod(podName, namespace).execute();
@@ -330,37 +335,50 @@ public class KubernetesPodManager {
   }
 
   /**
-   * Pod 이름 생성: strategy-{memberId}-{symbol}-{type}
-   * type: buy (매수만), sell (매도만), 또는 빈 문자열 (둘 다)
+   * Pod 이름 생성: strategy-{strategyName}-{memberId}-{symbol}-{type}-{mongoId}
+   * strategyName: 전략 이름 (소문자, 공백을 하이픈으로 변환, 특수문자 제거)
+   * memberId: 회원 ID
+   * symbol: 종목 코드 (소문자)
+   * type: buy (매수만), sell (매도만), 또는 both (둘 다)
+   * mongoId: MongoDB UUID 마지막 8자리 (유니크성 보장)
    */
-  private String generatePodName(Long memberId, String symbol, Map<String, Object> strategyJson) {
-    String suffix = determineSuffix(strategyJson);
-    if (suffix.isEmpty()) {
-      return String.format("strategy-%d-%s", memberId, symbol.toLowerCase());
-    }
-    return String.format("strategy-%d-%s-%s", memberId, symbol.toLowerCase(), suffix);
+  private String generatePodName(Map<String, Object> strategyJson, Long memberId, String symbol,
+      String mongoStrategyId) {
+    String strategyName = extractAndSanitizeStrategyName(strategyJson);
+    String type = determineType(strategyJson);
+    // MongoDB ID의 마지막 8자리만 사용 (가독성 향상)
+    String shortId = mongoStrategyId.length() > 8 ? mongoStrategyId.substring(mongoStrategyId.length() - 8)
+        : mongoStrategyId;
+
+    return String.format("strategy-%s-%d-%s-%s-%s",
+        strategyName, memberId, symbol.toLowerCase(), type, shortId.toLowerCase());
   }
 
   /**
-   * ConfigMap 이름 생성: strategy-code-{memberId}-{symbol}-{type}
+   * ConfigMap 이름 생성:
+   * strategy-code-{strategyName}-{memberId}-{symbol}-{type}-{mongoId}
    */
-  private String generateConfigMapName(Long memberId, String symbol, Map<String, Object> strategyJson) {
-    String suffix = determineSuffix(strategyJson);
-    if (suffix.isEmpty()) {
-      return String.format("strategy-code-%d-%s", memberId, symbol.toLowerCase());
-    }
-    return String.format("strategy-code-%d-%s-%s", memberId, symbol.toLowerCase(), suffix);
+  private String generateConfigMapName(Map<String, Object> strategyJson, Long memberId, String symbol,
+      String mongoStrategyId) {
+    String strategyName = extractAndSanitizeStrategyName(strategyJson);
+    String type = determineType(strategyJson);
+    // MongoDB ID의 마지막 8자리만 사용
+    String shortId = mongoStrategyId.length() > 8 ? mongoStrategyId.substring(mongoStrategyId.length() - 8)
+        : mongoStrategyId;
+
+    return String.format("strategy-code-%s-%d-%s-%s-%s",
+        strategyName, memberId, symbol.toLowerCase(), type, shortId.toLowerCase());
   }
 
   /**
-   * 전략 JSON에서 buy/sell 여부를 확인하여 suffix 결정
+   * 전략 JSON에서 buy/sell 여부를 확인하여 type 결정
    * - buy만 있으면: "buy"
    * - sell만 있으면: "sell"
-   * - 둘 다 있거나 없으면: ""
+   * - 둘 다 있거나 없으면: "both"
    */
-  private String determineSuffix(Map<String, Object> strategyJson) {
+  private String determineType(Map<String, Object> strategyJson) {
     if (strategyJson == null) {
-      return "";
+      return "both";
     }
 
     boolean hasBuy = strategyJson.containsKey("buy") && strategyJson.get("buy") != null;
@@ -371,6 +389,42 @@ public class KubernetesPodManager {
     } else if (!hasBuy && hasSell) {
       return "sell";
     }
-    return ""; // 둘 다 있거나 둘 다 없으면 suffix 없음
+    return "both"; // 둘 다 있거나 둘 다 없으면 both
+  }
+
+  /**
+   * 전략 이름 추출 및 Kubernetes 리소스 이름 규칙에 맞게 변환
+   * - 소문자로 변환
+   * - 공백을 하이픈(-)으로 변환
+   * - 특수문자 제거 (영문, 숫자, 하이픈만 허용)
+   * - 최대 20자로 제한
+   */
+  private String extractAndSanitizeStrategyName(Map<String, Object> strategyJson) {
+    if (strategyJson == null || !strategyJson.containsKey("strategy_name")) {
+      return "unnamed";
+    }
+
+    String strategyName = (String) strategyJson.get("strategy_name");
+    if (strategyName == null || strategyName.trim().isEmpty()) {
+      return "unnamed";
+    }
+
+    // 소문자 변환 및 공백을 하이픈으로 변환
+    String sanitized = strategyName.toLowerCase()
+        .trim()
+        .replaceAll("\\s+", "-") // 공백을 하이픈으로
+        .replaceAll("[^a-z0-9-]", "") // 영문, 숫자, 하이픈만 허용
+        .replaceAll("-+", "-"); // 연속된 하이픈을 하나로
+
+    // 앞뒤 하이픈 제거
+    sanitized = sanitized.replaceAll("^-+|-+$", "");
+
+    // 빈 문자열이면 기본값
+    if (sanitized.isEmpty()) {
+      return "unnamed";
+    }
+
+    // 최대 20자로 제한 (전체 이름이 너무 길어지는 것 방지)
+    return sanitized.length() > 20 ? sanitized.substring(0, 20) : sanitized;
   }
 }
