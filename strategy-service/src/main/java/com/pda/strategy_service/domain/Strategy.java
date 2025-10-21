@@ -96,7 +96,7 @@ public class Strategy extends BaseEntity {
     }
 
     public SimpleStrategy toSimpleStrategyDto() {
-        return new SimpleStrategy(id, strategyName);
+        return new SimpleStrategy(id, strategyName, strategyActivatedStatus);
     }
 
     public StrategyMetaDto toStrategyMetaDto() {
