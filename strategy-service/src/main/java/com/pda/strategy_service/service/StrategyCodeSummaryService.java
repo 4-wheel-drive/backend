@@ -11,6 +11,7 @@ import com.pda.strategy_service.domain.Strategy;
 import com.pda.strategy_service.domain.StrategyCodeSummary;
 import com.pda.strategy_service.repository.jpa.StrategyCodeSummaryRepository;
 import com.pda.strategy_service.repository.jpa.StrategyRepository;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,40 +26,35 @@ public class StrategyCodeSummaryService {
     private final StrategyRepository strategyRepository;
     private final StrategyCodeSummaryRepository strategyCodeSummaryRepository;
 
-    public String generateSummary(String strategyCode) {
+    public String generateSummary(String strategyCode, Map<String, Object> strategyJson) {
         try {
             String prompt = """
                     너는 Python 자동매매 전략 코드 리팩토링 전문가야.
                     
-                    사용자가 작성한 원본 전략 코드를 입력받으면,
-                    코드를 간결하게 정리하되, 코드 상단과 주요 로직 위에
-                    **알고리즘의 흐름(전략이 어떻게 동작하는지)** 만 주석으로 추가해줘.
+                    아래 전략 코드를 **현실감 있는 수도코드 스타일**로 재구성해줘.  
+                    코드는 실제로 실행되지 않아도 되지만, 각 함수가 무슨 일을 하는지 흐름이 코드만 봐도 이해되게 작성해라.
                     
-                    ⚙️ [목표]
-                    - 코드의 핵심 로직(지표 계산, 조건 판단, 매수/매도 실행)만 남긴 버전을 생성
-                    - 외부 의존성(import os, redis, kafka, requests 등)은 모두 제거
-                    - try/except, print, logger, 환경변수(os.getenv) 등 실행용 코드는 삭제
-                    - 각 함수에 불필요한 세부 주석은 달지 말고,
-                      대신 전체 전략의 동작 흐름을 자연스러운 한국어 주석으로 표현
-                    - 상단에는 다음 정보를 포함:
-                      # 전략 이름: (존재한다면)
-                      # 종목: (존재한다면)
-                      # 로직 요약: (핵심 매매 조건을 한 줄로 설명)
-                    - 코드 외에는 불필요한 설명을 출력하지 말 것
-                    - 반드시 ```python 으로 시작하고 ``` 으로 끝나는 형식을 유지
+                    🎯 리팩토링 기준
+                    - import, 설정, 환경변수, logger, try/except, print 등은 제거
+                    - 함수 내부는 단순 pass 대신, 동작 의도를 드러내는 구체적 호출 형태로 표현
+                      예: `return fetch_market_price(symbol, field, timeframe)`  
+                           `return send_trading_request("BUY", symbol, qty)`
+                    - 불필요한 주석은 전부 제거, 코드 상단의 전략 요약만 남김
+                    - 코드 외부의 설명이나 분석 문장은 절대 작성하지 말 것
+                    - 실행 흐름은 다음 순서를 따라야 함:
+                      가격 확인 → 지표 확인 → 조건 판단 → 주문 실행 → 전략 중지
+                    - 함수 이름은 원본 구조(get_price, get_indicator, check_buy_signal, send_order, main 등)를 유지
+                    - 포트, IP, URL, 토큰 등 민감 정보는 <REDACTED> 처리 또는 생략
                     
-                    💡 [주석 예시]
-                    # 전략 이름: RSI 돌파 매수 전략
-                    # 종목: 005930 (삼성전자)
-                    # 로직 요약: RSI(14)가 30 이하에서 30선을 상향 돌파할 때 매수 진입
-                    # 알고리즘 흐름:
-                    # 1. RSI 지표값을 가져옴
-                    # 2. 이전 봉과 현재 봉의 RSI 비교
-                    # 3. RSI가 30 이하 → 30 상향 시 매수 조건 충족
-                    # 4. 조건 만족 시 매수 함수 호출
+                    💡 strategyJson 기반 상단 주석 구성
+                    - JSON에 존재하는 경우만 아래 항목 포함:
+                      # 전략 이름:
+                      # 종목:
+                      # 로직 요약:
+                      # 알고리즘 흐름:
                     
-                    📘 [입력 코드]
-                    """ + strategyCode;
+                    📘 입력 코드:
+                    """ + strategyCode + "\n\n📘 전략 정보(JSON):\n" + strategyJson;
 
             ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                     .model(ChatModel.GPT_4O_MINI)
@@ -87,12 +83,12 @@ public class StrategyCodeSummaryService {
     }
 
     @Transactional
-    public void generateSummaryAndSave(Long strategyId, String strategyCode) {
+    public void generateSummaryAndSave(Map<String, Object> strategyJson, Long strategyId, String strategyCode) {
         Strategy strategy = strategyRepository.findById(strategyId)
                 .orElseThrow(() -> new ResourceNotFound(ResponseMessage.STRATEGY_NOT_FOUND));
 
         try {
-            String summarizedCode = generateSummary(strategyCode);
+            String summarizedCode = generateSummary(strategyCode, strategyJson);
 
             StrategyCodeSummary summary = StrategyCodeSummary.builder()
                     .strategy(strategy)

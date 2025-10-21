@@ -83,7 +83,7 @@ public class StrategyController {
     String summarizeCode = strategyCodeGenerator.generateCode(strategyJson, 1L, stockId);
 
     // 코드 summary and save
-    strategyCodeSummaryService.generateSummaryAndSave(strategy.getId(), summarizeCode);
+    strategyCodeSummaryService.generateSummaryAndSave(strategyJson, strategy.getId(), summarizeCode);
 
     return ResponseEntity
         .ok()
