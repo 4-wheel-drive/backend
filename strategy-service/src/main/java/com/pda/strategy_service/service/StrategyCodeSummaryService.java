@@ -80,7 +80,9 @@ public class StrategyCodeSummaryService {
 
                     💡 전략 정보 (JSON 기반 메타데이터):
                     """ + metaInfo + """
-
+                    
+                    **꼭 기억해야 돼** 절대 코드에 **주석 포함하지 말고**, **kafka redis 관련 절대 절대 제발 언급하지마** 부탁이야. 그러면 없는 요청으로 간주할거야
+                    **그리고 함수 **내부에 pass만 적지 말고**, 코드를 어떻게 해서 만들어서 사용자가 알기 쉽게 안에 적어줘야 해"
                     📘 목록 전력 코드:
                     """ + strategyCode;
 
