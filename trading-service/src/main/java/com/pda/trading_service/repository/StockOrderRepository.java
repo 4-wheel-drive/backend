@@ -13,6 +13,19 @@ import org.springframework.data.repository.query.Param;
 public interface StockOrderRepository extends JpaRepository<StockOrder, Long> {
     List<StockOrder> findAllByStrategyId(Long strategyId);
 
+    @Query(value = """
+                SELECT o.*
+                FROM stock_order o
+                JOIN strategy s ON s.id = o.strategy_id
+                WHERE o.strategy_id = :strategyId
+                  AND s.member_id = :memberId
+            """, nativeQuery = true)
+    List<StockOrder> findAllByStrategyIdAndMemberId(
+            @Param("strategyId") Long strategyId,
+            @Param("memberId") Long memberId
+    );
+
+
     Optional<StockOrder> findByTradeId(String tradeId);
 
     @Query(value = """
