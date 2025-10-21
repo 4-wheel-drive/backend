@@ -286,11 +286,11 @@ public class StrategyCodeGenerator {
             if name == "BOLLINGER_BANDS":
                 ind_key = f"bb_{period}_{subfield}" if subfield else f"bb_{period}_middle"
             elif name == "BOLLINGER_BANDWIDTH" or name == "BOLLINGER_BANDSWIDTH":
-                ind_key = f"bb_width_{period}"
-            elif name == "EMA": ind_key = f"ema{period}"
-            elif name == "SMA": ind_key = f"sma{period}"
+                ind_key = f"bb_{period}_width"
+            elif name == "EMA": ind_key = f"ema_{period}"
+            elif name == "SMA": ind_key = f"sma_{period}"
             elif name == "RSI":
-                ind_key = f"rsi{period}_{subfield}" if subfield else f"rsi{period}"
+                ind_key = f"rsi_{period}_{subfield}" if subfield else f"rsi_{period}"
             elif name == "MACD":
                 ind_key = {"line": "macd_line", "signal": "macd_signal", "histogram": "macd_histogram"}.get(subfield, "macd_line")
             elif name == "VWAP":
@@ -321,7 +321,7 @@ public class StrategyCodeGenerator {
                     cache = latest_data.get(indicators_topic, {})
 
                 if name == "BOLLINGER_BANDS" and subfield:
-                    kafka_key = f"bb_{subfield}"
+                    kafka_key = f"bb_{period}_{subfield}"
                     return float(cache.get(kafka_key, 0)) if cache and cache.get(kafka_key) else None
                 return float(cache.get(ind_key, 0)) if cache and cache.get(ind_key) else None
 
@@ -638,17 +638,35 @@ public class StrategyCodeGenerator {
 
                       # 이전 데이터 백업
                       prev_data[f"prev_{tf}"] = latest_data.get(topic, {})
-                      latest_data[topic] = data
 
-                      # 메시지 타입에 따른 처리
-                      if topic_type == "candles":
+                      # indicators 토픽인 경우, 중첩된 indicators와 candle 객체를 평탄화
+                      if topic_type == "indicators" and "indicators" in data:
+                          # indicators 객체와 candle 객체를 평탄화하여 병합
+                          flattened_data = {}
+
+                          # candle 데이터 추가 (OHLCV)
+                          if "candle" in data:
+                              candle = data.get("candle", {})
+                              flattened_data.update(candle)
+
+                          # indicators 데이터 추가 (RSI, MACD, 볼린저밴드 등)
+                          indicators = data.get("indicators", {})
+                          flattened_data.update(indicators)
+
+                          # timestamp 필드 추가
+                          flattened_data["timestamp"] = data.get("timestamp")
+
+                          latest_data[topic] = flattened_data
+                          print(f"📈 [{topic}] 지표 데이터: {data.get('timestamp', 'N/A')}")
+                      elif topic_type == "candles":
+                          # candles 토픽은 그대로 저장
+                          latest_data[topic] = data
                           # tick 타임프레임은 'tick_time', 나머지는 't' 필드 사용
                           time_field = data.get('tick_time' if tf == 'tick' else 't', 'N/A')
                           print(f"📊 [{topic}] 봉 데이터: {time_field}")
-                      elif topic_type == "indicators":
-                          print(f"📈 [{topic}] 지표 데이터: {data.get('t', 'N/A')}")
                       else:
-                          print(f"📨 [{topic}] {data.get('t', 'N/A')}")
+                          latest_data[topic] = data
+                          print(f"📨 [{topic}] {data.get('t', data.get('timestamp', 'N/A'))}")
 
           """);
 
