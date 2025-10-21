@@ -6,9 +6,9 @@ import java.util.List;
 public class TradeExecutionResponseDto {
 
     public record ReadTradeExecution(
-            Integer tradeExecutionCount,   // 현재 페이지의 데이터 개수
-            PageInfo pageInfo,             // 페이지 정보
-            List<TradeExecutionDto> tradeExecutions // 실제 데이터
+            Long tradeExecutionCount,
+            PageInfo pageInfo,
+            List<TradeExecutionDto> tradeExecutions
     ) {
         public static ReadTradeExecution of(
                 List<TradeExecutionDto> tradeExecutions,
@@ -18,7 +18,7 @@ public class TradeExecutionResponseDto {
                 int pageSize
         ) {
             return new ReadTradeExecution(
-                    tradeExecutions.size(),
+                    totalElements,
                     new PageInfo(currentPage, totalPages, totalElements, pageSize),
                     tradeExecutions
             );
@@ -26,9 +26,9 @@ public class TradeExecutionResponseDto {
     }
 
     public record PageInfo(
-            int currentPage,     // 현재 페이지 번호
-            int totalPages,      // 전체 페이지 수
-            long totalElements,  // 전체 데이터 수
-            int size             // 한 페이지당 데이터 개수
+            int currentPage,
+            int totalPages,
+            long totalElements,
+            int size
     ) {}
 }
