@@ -77,13 +77,14 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     log.info("✅ Python 코드 생성 완료 - 길이: {} bytes", pythonCode.length());
 
     // 7. Kubernetes Pod 생성하여 전략 실행
-    log.info("☸️ Kubernetes Pod 생성 시작 - strategyId: {}", strategyId);
+    log.info("☸️ Kubernetes Pod 생성 시작 - strategyId: {}, mongoId: {}", strategyId, customStrategy.getId());
     String podName = podManager.createStrategyPod(
         strategyId,
         memberId,
         pythonCode,
         symbol,
-        strategyJson);
+        strategyJson,
+        customStrategy.getId());
 
     // 8. 전략 상태를 ACTIVATED로 변경
     strategy.update(
@@ -124,8 +125,8 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     Map<String, Object> strategyJson = convertToStrategyJson(customStrategy);
 
     // 4. Kubernetes Pod 삭제
-    log.info("☸️ Kubernetes Pod 삭제 시작 - strategyId: {}", strategyId);
-    podManager.deleteStrategyPod(memberId, symbol, strategyJson);
+    log.info("☸️ Kubernetes Pod 삭제 시작 - strategyId: {}, mongoId: {}", strategyId, customStrategy.getId());
+    podManager.deleteStrategyPod(memberId, symbol, strategyJson, customStrategy.getId());
 
     // 5. 전략 상태를 PENDING으로 변경
     strategy.update(
@@ -154,8 +155,9 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     String symbol = extractSymbol(customStrategy, strategy);
     Map<String, Object> strategyJson = convertToStrategyJson(customStrategy);
 
-    boolean isRunning = podManager.isPodRunning(memberId, symbol, strategyJson);
-    log.info("Pod 실행 상태 - strategyId: {}, running: {}", strategyId, isRunning);
+    boolean isRunning = podManager.isPodRunning(memberId, symbol, strategyJson, customStrategy.getId());
+    log.info("Pod 실행 상태 - strategyId: {}, mongoId: {}, running: {}",
+        strategyId, customStrategy.getId(), isRunning);
 
     return isRunning;
   }
