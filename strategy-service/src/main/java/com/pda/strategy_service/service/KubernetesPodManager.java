@@ -39,13 +39,13 @@ public class KubernetesPodManager {
   @Value("${kafka.bootstrap-servers:my-cluster-kafka-bootstrap.kafka:9092}")
   private String kafkaBrokers;
 
-  @Value("${spring.data.redis.host:redis-master.redis}")
+  @Value("${spring.redis.host:redis-master.redis}")
   private String redisHost;
 
-  @Value("${spring.data.redis.port:6379}")
+  @Value("${spring.redis.port:6379}")
   private String redisPort;
 
-  @Value("${spring.data.redis.password:}")
+  @Value("${spring.redis.password:}")
   private String redisPassword;
 
   @Value("${trading-service.url:http://trading-service.backend:8082}")
@@ -123,6 +123,7 @@ public class KubernetesPodManager {
     try {
       cleanupExistingResources(podName, configMapName);
       log.info("전략 Pod 삭제 완료 - podName: {}", podName);
+      log.info("ℹ️  Consumer Group은 offset 미저장으로 자동 정리됩니다.");
     } catch (Exception e) {
       log.error("전략 Pod 삭제 실패 - mongoId: {}, podName: {}, error: {}", mongoStrategyId, podName, e.getMessage(), e);
       throw new RuntimeException("전략 Pod 삭제 실패: " + e.getMessage(), e);
@@ -427,4 +428,5 @@ public class KubernetesPodManager {
     // 최대 20자로 제한 (전체 이름이 너무 길어지는 것 방지)
     return sanitized.length() > 20 ? sanitized.substring(0, 20) : sanitized;
   }
+
 }

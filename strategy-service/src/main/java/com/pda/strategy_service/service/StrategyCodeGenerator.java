@@ -167,7 +167,6 @@ public class StrategyCodeGenerator {
    * 데이터 소스 생성 (Redis, Kafka)
    */
   private String genDataSource() {
-    boolean hasDaily = timeframes.contains("1d");
     List<String> kafkaTfs = timeframes.stream()
         .filter(tf -> !"1d".equals(tf))
         .sorted()
@@ -175,25 +174,22 @@ public class StrategyCodeGenerator {
 
     StringBuilder code = new StringBuilder("latest_data = {}\nprev_data = {}\n");
 
-    if (hasDaily) {
-      code.append("""
+    // 항상 Redis 연결 시도 (일봉 데이터 조회가 필요할 수 있음)
+    code.append("""
 
-          try:
-              redis_client = redis.Redis(
-                  host=REDIS_HOST,
-                  port=REDIS_PORT,
-                  password=REDIS_PASSWORD if REDIS_PASSWORD else None,
-                  db=0,
-                  decode_responses=True
-              )
-              redis_client.ping()
-              print("✅ Redis 연결")
-          except Exception as e:
-              print(f"❌ Redis 실패: {e}")
-              redis_client = None""");
-    } else {
-      code.append("\nredis_client = None");
-    }
+        try:
+            redis_client = redis.Redis(
+                host=REDIS_HOST,
+                port=REDIS_PORT,
+                password=REDIS_PASSWORD if REDIS_PASSWORD else None,
+                db=0,
+                decode_responses=True
+            )
+            redis_client.ping()
+            print("✅ Redis 연결")
+        except Exception as e:
+            print(f"❌ Redis 실패: {e}")
+            redis_client = None""");
 
     if (!kafkaTfs.isEmpty()) {
       List<String> topics = new ArrayList<>();
@@ -212,14 +208,17 @@ public class StrategyCodeGenerator {
 
           try:
               topics = %s
+              consumer_group_id = f'strategy-{STRATEGY_ID}-{SYMBOL}'
               kafka_consumer = Consumer({
                   'bootstrap.servers': KAFKA_BROKERS,
-                  'group.id': f'strategy-{SYMBOL}',
+                  'group.id': consumer_group_id,
                   'auto.offset.reset': 'latest',
-                  'enable.auto.commit': True
+                  'enable.auto.commit': False
               })
               kafka_consumer.subscribe(topics)
               print(f"✅ Kafka 구독: {topics}")
+              print(f"   Consumer Group: {consumer_group_id}")
+              print(f"   (전략 삭제 시 자동 정리)")
           except Exception as e:
               print(f"❌ Kafka 실패: {e}")
               kafka_consumer = None""", topicsStr));
@@ -436,9 +435,13 @@ public class StrategyCodeGenerator {
         def %s():
             try:
                 %s
-                return %s
+                result = %s
+                print(f"   ✓ 조건 평가 결과: {result}")
+                return result
             except Exception as e:
                 print(f"⚠️ %s 실패: {e}")
+                import traceback
+                traceback.print_exc()
                 return False""", name, guardCheck, condition, name);
   }
 
