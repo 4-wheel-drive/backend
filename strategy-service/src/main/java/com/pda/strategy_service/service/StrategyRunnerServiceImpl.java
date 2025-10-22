@@ -52,7 +52,7 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     // 2. 이미 실행 중인지 확인
     if (strategy.getStrategyActivatedStatus() == StrategyActivatedStatus.ACTIVATED) {
       log.warn("⚠️ 전략이 이미 실행 중입니다 - strategyId: {}", strategyId);
-      throw new StrategyException(ResponseMessage.STRATEGY_SAVE_FAILED);
+      throw new StrategyException(ResponseMessage.STRATEGY_ALREADY_RUNNING);
     }
 
     // 3. MongoDB에서 전략 상세 정보 조회
@@ -116,7 +116,7 @@ public class StrategyRunnerServiceImpl implements StrategyRunnerService {
     // 2. 실행 중이 아닌지 확인
     if (strategy.getStrategyActivatedStatus() == StrategyActivatedStatus.PENDING) {
       log.warn("⚠️ 전략이 실행 중이 아닙니다 - strategyId: {}", strategyId);
-      throw new StrategyException(ResponseMessage.STRATEGY_NOT_FOUND);
+      throw new StrategyException(ResponseMessage.STRATEGY_NOT_RUNNING);
     }
 
     // 3. 종목 코드 및 전략 JSON 추출 (Pod 이름 생성에 필요)

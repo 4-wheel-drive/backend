@@ -159,6 +159,7 @@ public class StrategyCodeGenerator {
         print(f"전략: %s")
         print(f"종목: {SYMBOL}, 회원: {MEMBER_ID}")
         print(f"Kafka: {KAFKA_BROKERS}")
+        print(f"상세 로그: 모든 데이터 조회 및 조건 평가 출력")
         print("=" * 60)""", symbol, memberId, name);
   }
 
@@ -239,48 +240,76 @@ public class StrategyCodeGenerator {
             key = field_map.get(field, field)
 
             if timeframe == "1d":
-                if not redis_client: return None
+                if not redis_client:
+                    print(f"  ⚠️  get_price('{field}', '{timeframe}', {lookback}) -> Redis 미연결")
+                    return None
                 try:
-                    data = redis_client.lindex(f"C:{SYMBOL}:1d", -(lookback + 1))
-                    return float(json.loads(data).get(key, 0)) if data else None
-                except: return None
+                    redis_key = f"C:{SYMBOL}:1d"
+                    data = redis_client.lindex(redis_key, -(lookback + 1))
+                    if data:
+                        value = float(json.loads(data).get(key, 0))
+                        print(f"  📊 get_price('{field}', '{timeframe}', {lookback}) -> Redis[{redis_key}] = {value}")
+                        return value
+                    print(f"  ⚠️  get_price('{field}', '{timeframe}', {lookback}) -> Redis[{redis_key}] 데이터 없음")
+                    return None
+                except Exception as e:
+                    print(f"  ❌ get_price('{field}', '{timeframe}', {lookback}) -> Redis 조회 실패: {e}")
+                    return None
             elif timeframe == "tick":
                 # tick 타임프레임은 OHLC가 아닌 price 필드 사용
                 candles_topic = f"candles.{SYMBOL}.tick"
                 cache = prev_data.get(f"prev_tick", {}) if lookback > 0 else latest_data.get(candles_topic, {})
 
                 if not cache:
+                    print(f"  ⚠️  get_price('{field}', '{timeframe}', {lookback}) -> Kafka[{candles_topic}] 데이터 없음")
                     return None
 
                 # tick 데이터는 open/high/low/close 모두 price로 매핑
                 if field in ['open', 'high', 'low', 'close']:
-                    return float(cache.get('price', 0)) if cache.get('price') else None
+                    value = float(cache.get('price', 0)) if cache.get('price') else None
+                    print(f"  📊 get_price('{field}', '{timeframe}', {lookback}) -> Kafka[{candles_topic}] = {value}")
+                    return value
                 elif field == 'volume':
-                    return float(cache.get('volume', 0)) if cache.get('volume') else None
+                    value = float(cache.get('volume', 0)) if cache.get('volume') else None
+                    print(f"  📊 get_price('{field}', '{timeframe}', {lookback}) -> Kafka[{candles_topic}] = {value}")
+                    return value
                 else:
-                    return float(cache.get(field, 0)) if cache.get(field) else None
+                    value = float(cache.get(field, 0)) if cache.get(field) else None
+                    print(f"  📊 get_price('{field}', '{timeframe}', {lookback}) -> Kafka[{candles_topic}] = {value}")
+                    return value
             else:
                 # 먼저 candles 토픽에서 시도
                 candles_topic = f"candles.{SYMBOL}.{timeframe}"
                 indicators_topic = f"indicators.{SYMBOL}.{timeframe}"
 
                 cache = None
+                source = None
                 if lookback > 0:
                     cache = prev_data.get(f"prev_{timeframe}", {})
+                    source = f"prev_{timeframe}"
                 else:
                     # candles 토픽에서 데이터 찾기
                     candles_data = latest_data.get(candles_topic, {})
                     if candles_data and key in candles_data:
                         cache = candles_data
+                        source = f"Kafka[{candles_topic}]"
                     else:
                         # candles에 없으면 indicators 토픽에서 찾기
                         cache = latest_data.get(indicators_topic, {})
+                        source = f"Kafka[{indicators_topic}]"
 
-                return float(cache.get(key, 0)) if cache and cache.get(key) else None
+                if cache and cache.get(key):
+                    value = float(cache.get(key, 0))
+                    print(f"  📊 get_price('{field}', '{timeframe}', {lookback}) -> {source} = {value}")
+                    return value
+                else:
+                    print(f"  ⚠️  get_price('{field}', '{timeframe}', {lookback}) -> {source} 데이터 없음")
+                    return None
 
         def get_indicator(name, period, timeframe, subfield=None, lookback=0):
             # tick 타임프레임에서는 지표 계산 불가
             if timeframe == "tick":
+                print(f"  ⚠️  get_indicator('{name}', {period}, '{timeframe}') -> tick에서는 지표 계산 불가")
                 return None
 
             if name == "BOLLINGER_BANDS":
@@ -302,28 +331,54 @@ public class StrategyCodeGenerator {
             else: ind_key = name.lower()
 
             if timeframe == "1d":
-                if not redis_client: return None
+                if not redis_client:
+                    print(f"  ⚠️  get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> Redis 미연결")
+                    return None
                 try:
-                    data = redis_client.lindex(f"I:{SYMBOL}:1d", -(lookback + 1))
+                    redis_key = f"I:{SYMBOL}:1d"
+                    data = redis_client.lindex(redis_key, -(lookback + 1))
                     if data:
                         indicators = json.loads(data)
                         val = indicators.get(ind_key)
-                        return float(val) if val else None
-                except: return None
+                        if val:
+                            value = float(val)
+                            print(f"  📈 get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> Redis[{redis_key}][{ind_key}] = {value}")
+                            return value
+                        print(f"  ⚠️  get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> Redis[{redis_key}][{ind_key}] 키 없음")
+                        return None
+                    print(f"  ⚠️  get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> Redis[{redis_key}] 데이터 없음")
+                    return None
+                except Exception as e:
+                    print(f"  ❌ get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> Redis 조회 실패: {e}")
+                    return None
             else:
                 # indicators 토픽에서 데이터 찾기
                 indicators_topic = f"indicators.{SYMBOL}.{timeframe}"
 
                 cache = None
+                source = None
                 if lookback > 0:
                     cache = prev_data.get(f"prev_{timeframe}", {})
+                    source = f"prev_{timeframe}"
                 else:
                     cache = latest_data.get(indicators_topic, {})
+                    source = f"Kafka[{indicators_topic}]"
 
                 if name == "BOLLINGER_BANDS" and subfield:
                     kafka_key = f"bb_{period}_{subfield}"
-                    return float(cache.get(kafka_key, 0)) if cache and cache.get(kafka_key) else None
-                return float(cache.get(ind_key, 0)) if cache and cache.get(ind_key) else None
+                    if cache and cache.get(kafka_key):
+                        value = float(cache.get(kafka_key, 0))
+                        print(f"  📈 get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> {source}[{kafka_key}] = {value}")
+                        return value
+                    print(f"  ⚠️  get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> {source}[{kafka_key}] 데이터 없음")
+                    return None
+
+                if cache and cache.get(ind_key):
+                    value = float(cache.get(ind_key, 0))
+                    print(f"  📈 get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> {source}[{ind_key}] = {value}")
+                    return value
+                print(f"  ⚠️  get_indicator('{name}', {period}, '{timeframe}', '{subfield}', {lookback}) -> {source}[{ind_key}] 데이터 없음")
+                return None
 
         def get_profit_loss(field="percent"):
             try:
@@ -610,86 +665,104 @@ public class StrategyCodeGenerator {
     StringBuilder code = new StringBuilder("def main():\n");
 
     if (hasKafka) {
-      code.append("""
-              if not kafka_consumer:
-                  print("❌ Kafka Consumer 없음")
-                  return
+      code.append(
+          """
+                  if not kafka_consumer:
+                      print("❌ Kafka Consumer 없음")
+                      return
 
-              print("\\n🚀 Kafka Streaming 시작\\n")
-              try:
-                  while True:
-                      msg = kafka_consumer.poll(1.0)
-                      if msg is None:
-                          continue
-                      if msg.error():
-                          if msg.error().code() == KafkaError._PARTITION_EOF:
+                  print("\\n🚀 Kafka Streaming 시작\\n")
+                  try:
+                      while True:
+                          msg = kafka_consumer.poll(1.0)
+                          if msg is None:
                               continue
+                          if msg.error():
+                              if msg.error().code() == KafkaError._PARTITION_EOF:
+                                  continue
+                              else:
+                                  print(f"Kafka 에러: {msg.error()}")
+                                  break
+
+                          topic = msg.topic()
+                          data = json.loads(msg.value().decode('utf-8'))
+
+                          # 토픽 파싱: candles.005930.1m 또는 indicators.005930.1m
+                          topic_parts = topic.split('.')
+                          topic_type = topic_parts[0]  # candles 또는 indicators
+                          tf = topic_parts[-1]         # 타임프레임
+
+                          # 이전 데이터 백업
+                          prev_data[f"prev_{tf}"] = latest_data.get(topic, {})
+
+                          # indicators 토픽인 경우, 중첩된 indicators와 candle 객체를 평탄화
+                          if topic_type == "indicators" and "indicators" in data:
+                              # indicators 객체와 candle 객체를 평탄화하여 병합
+                              flattened_data = {}
+
+                              # candle 데이터 추가 (OHLCV)
+                              if "candle" in data:
+                                  candle = data.get("candle", {})
+                                  flattened_data.update(candle)
+
+                              # indicators 데이터 추가 (RSI, MACD, 볼린저밴드 등)
+                              indicators = data.get("indicators", {})
+                              flattened_data.update(indicators)
+
+                              # timestamp 필드 추가
+                              flattened_data["timestamp"] = data.get("timestamp")
+
+                              latest_data[topic] = flattened_data
+                              print(f"\\n📈 [{topic}] 지표 데이터 수신: {data.get('timestamp', 'N/A')}")
+                              # 주요 지표 값 출력
+                              if 'rsi_14' in indicators:
+                                  print(f"   RSI(14): {indicators.get('rsi_14', 'N/A')}")
+                              if 'macd_line' in indicators:
+                                  print(f"   MACD: {indicators.get('macd_line', 'N/A')}")
+                              if 'c' in flattened_data:
+                                  print(f"   종가: {flattened_data.get('c', 'N/A')}")
+                          elif topic_type == "candles":
+                              # candles 토픽은 그대로 저장
+                              latest_data[topic] = data
+                              # tick 타임프레임은 'tick_time', 나머지는 't' 필드 사용
+                              time_field = data.get('tick_time' if tf == 'tick' else 't', 'N/A')
+                              print(f"\\n📊 [{topic}] 봉 데이터 수신: {time_field}")
+                              if tf == 'tick':
+                                  print(f"   가격: {data.get('price', 'N/A')}, 거래량: {data.get('volume', 'N/A')}")
+                              else:
+                                  print(f"   시가: {data.get('o', 'N/A')}, 고가: {data.get('h', 'N/A')}, 저가: {data.get('l', 'N/A')}, 종가: {data.get('c', 'N/A')}")
                           else:
-                              print(f"Kafka 에러: {msg.error()}")
-                              break
+                              latest_data[topic] = data
+                              print(f"\\n📨 [{topic}] {data.get('t', data.get('timestamp', 'N/A'))}")
 
-                      topic = msg.topic()
-                      data = json.loads(msg.value().decode('utf-8'))
-
-                      # 토픽 파싱: candles.005930.1m 또는 indicators.005930.1m
-                      topic_parts = topic.split('.')
-                      topic_type = topic_parts[0]  # candles 또는 indicators
-                      tf = topic_parts[-1]         # 타임프레임
-
-                      # 이전 데이터 백업
-                      prev_data[f"prev_{tf}"] = latest_data.get(topic, {})
-
-                      # indicators 토픽인 경우, 중첩된 indicators와 candle 객체를 평탄화
-                      if topic_type == "indicators" and "indicators" in data:
-                          # indicators 객체와 candle 객체를 평탄화하여 병합
-                          flattened_data = {}
-
-                          # candle 데이터 추가 (OHLCV)
-                          if "candle" in data:
-                              candle = data.get("candle", {})
-                              flattened_data.update(candle)
-
-                          # indicators 데이터 추가 (RSI, MACD, 볼린저밴드 등)
-                          indicators = data.get("indicators", {})
-                          flattened_data.update(indicators)
-
-                          # timestamp 필드 추가
-                          flattened_data["timestamp"] = data.get("timestamp")
-
-                          latest_data[topic] = flattened_data
-                          print(f"📈 [{topic}] 지표 데이터: {data.get('timestamp', 'N/A')}")
-                      elif topic_type == "candles":
-                          # candles 토픽은 그대로 저장
-                          latest_data[topic] = data
-                          # tick 타임프레임은 'tick_time', 나머지는 't' 필드 사용
-                          time_field = data.get('tick_time' if tf == 'tick' else 't', 'N/A')
-                          print(f"📊 [{topic}] 봉 데이터: {time_field}")
-                      else:
-                          latest_data[topic] = data
-                          print(f"📨 [{topic}] {data.get('t', data.get('timestamp', 'N/A'))}")
-
-          """);
+              """);
 
       if (hasBuy) {
         code.append(String.format("""
+                        print("\\n🔍 매수 조건 확인 중...")
                         if check_buy_signal():
-                            print("🟢 매수 신호!")
+                            print("\\n🟢 매수 신호 발생!")
                             if send_buy_order(%d):
                                 print("✅ 매수 완료")
                                 stop_strategy()
                                 break
+                        else:
+                            print("   ❌ 매수 조건 미충족")
 
             """, buyQty));
       }
 
       if (hasSell) {
         code.append(String.format("""
+                        print("\\n🔍 매도 조건 확인 중...")
                         if check_sell_signal():
-                            print("🔴 매도 신호!")
+                            print("\\n🔴 매도 신호 발생!")
                             if send_sell_order(%d):
                                 print("✅ 매도 완료")
                                 stop_strategy()
                                 break
+                        else:
+                            print("   ❌ 매도 조건 미충족")
 
             """, sellQty));
       }
@@ -702,23 +775,29 @@ public class StrategyCodeGenerator {
 
       if (hasBuy) {
         code.append(String.format("""
+                        print("\\n🔍 매수 조건 확인 중...")
                         if check_buy_signal():
-                            print("🟢 매수 신호!")
+                            print("\\n🟢 매수 신호 발생!")
                             if send_buy_order(%d):
                                 print("✅ 매수 완료")
                                 stop_strategy()
                                 break
+                        else:
+                            print("   ❌ 매수 조건 미충족")
             """, buyQty));
       }
 
       if (hasSell) {
         code.append(String.format("""
+                        print("\\n🔍 매도 조건 확인 중...")
                         if check_sell_signal():
-                            print("🔴 매도 신호!")
+                            print("\\n🔴 매도 신호 발생!")
                             if send_sell_order(%d):
                                 print("✅ 매도 완료")
                                 stop_strategy()
                                 break
+                        else:
+                            print("   ❌ 매도 조건 미충족")
             """, sellQty));
       }
 
