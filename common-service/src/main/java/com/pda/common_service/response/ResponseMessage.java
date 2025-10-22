@@ -10,13 +10,13 @@ public enum ResponseMessage {
 
     /*
      * member
-     * */
+     */
     MEMBER_NOT_FOUND("MEMBER-NOT-FOUND", "존재하지 않는 유저입니다"),
     MEMBER_ALREADY_EXISTED("MEMBER_ALREADY_EXISTED", "이미 존재하는 유저입니다"),
 
     /*
      * auth
-     * */
+     */
     ACCESS_TOKEN_NOT_FOUND("AUTH-ACCESS-TOKEN-NOT-FOUND", "헤더에 토큰이 존재하지 않습니다."),
     TOKEN_IS_EXPIRED("TOKEN-IS-EXPIRED", "토큰이 만료되었습니다. 다시 로그인해주세요."),
     TOKEN_IS_INVALID("TOKEN-IS-INVALID", "토큰이 유효하지 않습니다."),
@@ -34,6 +34,8 @@ public enum ResponseMessage {
     GET_STRATEGIES_SUCCESS("GET_STRATEGIES_SUCCESS", "전략 전체 조회를 성공했습니다."),
     GET_MONO_STRATEGY_SUCCESS("GET_MONO_STRATEGY_SUCCESS", "단일 조회 전략 조회를 성공했습니다."),
     STRATEGY_NOT_FOUND("STRATEGY_NOT_FOUND", "존재하지 않는 전략입니다."),
+    STRATEGY_NOT_RUNNING("STRATEGY_NOT_RUNNING", "전략이 실행 중이 아닙니다."),
+    STRATEGY_ALREADY_RUNNING("STRATEGY_ALREADY_RUNNING", "전략이 이미 실행 중입니다."),
     STRATEGY_SAVE_FAILED("STRATEGY-SAVE-FAILED", "전략 저장에 실패했습니다."),
     STRATEGY_SAVE_SUCCESS("STRATEGY-SAVE-SUCCESS", "전략 저장에 성공했습니다."),
     STRATEGY_DELETE_SUCCESS("STRATEGY_DELETE_SUCCESS", "전략 삭제를 성공했습니다."),
