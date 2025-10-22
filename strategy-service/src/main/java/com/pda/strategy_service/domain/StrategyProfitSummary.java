@@ -38,4 +38,16 @@ public class StrategyProfitSummary extends BaseEntity {
                 .strategyProfitSummaryAvgBuyPrice(BigDecimal.ZERO)
                 .strategyProfitSummaryCurrentPrice(BigDecimal.ZERO).build();
     }
+
+    public void updateProfitSummary(BigDecimal avgBuyPrice, BigDecimal currentPrice, BigDecimal profitRate) {
+        if (avgBuyPrice != null) {
+            this.strategyProfitSummaryAvgBuyPrice = avgBuyPrice;
+        }
+        if (currentPrice != null) {
+            this.strategyProfitSummaryCurrentPrice = currentPrice;
+        }
+        if (profitRate != null) {
+            this.strategyProfitSummaryProfitRate = profitRate;
+        }
+    }
 }

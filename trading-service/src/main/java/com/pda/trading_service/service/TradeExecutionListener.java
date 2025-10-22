@@ -25,7 +25,6 @@ public class TradeExecutionListener {
     /**
      * 체결 이벤트 수신 후 DB 업데이트
      *
-     * @return true = 체결 완료되어 소켓 종료 신호
      */
     @Transactional
     public boolean onExecutionMessage(String orderNo, String payload) {

@@ -98,8 +98,10 @@ public class DashBoardServiceImpl implements DashBoardService {
                     BigDecimal currentPrice = strategy.getStrategyProfitSummary().getStrategyProfitSummaryCurrentPrice();
                     BigDecimal marketValue = currentPrice.multiply(BigDecimal.valueOf(totalQty));
                     BigDecimal pnl = marketValue.subtract(netInvestment);
+
                     BigDecimal profitRate = netInvestment.compareTo(BigDecimal.ZERO) > 0
-                            ? pnl.divide(netInvestment, 2, java.math.RoundingMode.HALF_UP)
+                            ? pnl.divide(netInvestment, 4, java.math.RoundingMode.HALF_UP)
+                            .multiply(BigDecimal.valueOf(100)) // ✅ 퍼센트 변환
                             : BigDecimal.ZERO;
 
                     return new RankingItem(
@@ -110,7 +112,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                             marketValue.setScale(2, java.math.RoundingMode.HALF_UP),
                             netInvestment.setScale(2, java.math.RoundingMode.HALF_UP),
                             pnl.setScale(2, java.math.RoundingMode.HALF_UP),
-                            profitRate.setScale(2, java.math.RoundingMode.HALF_UP)
+                            profitRate.setScale(2, java.math.RoundingMode.HALF_UP) // ✅ %
                     );
                 })
                 .filter(Objects::nonNull)
@@ -176,7 +178,8 @@ public class DashBoardServiceImpl implements DashBoardService {
             BigDecimal marketValue = currentPrice.multiply(BigDecimal.valueOf(totalQty))
                     .setScale(2, java.math.RoundingMode.HALF_UP);
             BigDecimal weight = totalMarketValue.compareTo(BigDecimal.ZERO) > 0
-                    ? marketValue.divide(totalMarketValue, 2, java.math.RoundingMode.HALF_UP)
+                    ? marketValue.divide(totalMarketValue, 4, java.math.RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100)) // ✅ %
                     : BigDecimal.ZERO;
 
             items.add(new StockItem(
@@ -184,7 +187,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                     stockInfo.stockName(),
                     marketValue,
                     totalQty,
-                    weight
+                    weight.setScale(2, java.math.RoundingMode.HALF_UP)
             ));
         }
 
@@ -228,6 +231,7 @@ public class DashBoardServiceImpl implements DashBoardService {
             BigDecimal profitRate = netInvestment.compareTo(BigDecimal.ZERO) > 0
                     ? totalAmount.subtract(netInvestment)
                     .divide(netInvestment, 4, java.math.RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100)) // ✅ 퍼센트 변환
                     : BigDecimal.ZERO;
 
             BigDecimal avgBuyPrice = transactionRepository.calculateAverageBuyPriceByMember(member, stockCode);
@@ -238,7 +242,7 @@ public class DashBoardServiceImpl implements DashBoardService {
                     totalQty,
                     avgBuyPrice.setScale(2, java.math.RoundingMode.HALF_UP),
                     totalAmount.setScale(2, java.math.RoundingMode.HALF_UP),
-                    profitRate.setScale(2, java.math.RoundingMode.HALF_UP)
+                    profitRate.setScale(2, java.math.RoundingMode.HALF_UP) // ✅ %
             ));
         }
 
