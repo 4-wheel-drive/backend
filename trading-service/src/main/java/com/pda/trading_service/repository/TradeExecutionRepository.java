@@ -27,4 +27,6 @@ public interface TradeExecutionRepository extends JpaRepository<TradeExecution, 
             @Param("stockOrderIds") List<Long> stockOrderIds,
             Pageable pageable
     );
+
+    boolean existsByStockOrder(StockOrder stockOrder);
 }

@@ -34,7 +34,7 @@ public class Transaction extends BaseEntity {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_order_id", unique = true, nullable = false)
+    @JoinColumn(name = "stock_order_id", nullable = false, unique = true)
     private StockOrder stockOrder;
 
     @Enumerated(value = EnumType.STRING)
