@@ -21,6 +21,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -83,12 +84,17 @@ public class Strategy extends BaseEntity {
     }
 
     public StrategyDto toDto(StockInfo stockInfo, BigDecimal profitAmount) {
+        BigDecimal profitRatePercent = strategyProfitSummary
+                .getStrategyProfitSummaryProfitRate()
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP);
+
         return new StrategyDto(
                 id,
                 stockInfo,
                 strategyName,
                 strategyActivatedStatus,
-                strategyProfitSummary.getStrategyProfitSummaryProfitRate(),
+                profitRatePercent,
                 profitAmount,
                 strategyProfitSummary.getStrategyProfitSummaryAvgBuyPrice(),
                 strategyProfitSummary.getStrategyProfitSummaryCurrentPrice()
