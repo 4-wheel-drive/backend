@@ -16,13 +16,13 @@ public interface TradeExecutionRepository extends JpaRepository<TradeExecution, 
     Optional<TradeExecution> findByStockOrder(StockOrder stockOrder);
 
     @Query("""
-        SELECT e
-        FROM TradeExecution e
-        JOIN FETCH e.stockOrder o
-        LEFT JOIN FETCH e.stock s
-        WHERE o.id IN :stockOrderIds
-        ORDER BY e.executionTime DESC
-    """)
+                SELECT e
+                FROM TradeExecution e
+                JOIN FETCH e.stockOrder o
+                LEFT JOIN FETCH e.stock s
+                WHERE o.id IN :stockOrderIds
+                ORDER BY e.executionTime DESC
+            """)
     Page<TradeExecution> findAllByStockOrderIdInWithOrder(
             @Param("stockOrderIds") List<Long> stockOrderIds,
             Pageable pageable
