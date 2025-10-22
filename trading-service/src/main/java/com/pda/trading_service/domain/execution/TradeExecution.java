@@ -22,9 +22,8 @@ public class TradeExecution extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 주문 참조 (FK) */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_order_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_order_id", nullable = false, unique = true)
     private StockOrder stockOrder;
 
     /** 매수/매도 구분 */

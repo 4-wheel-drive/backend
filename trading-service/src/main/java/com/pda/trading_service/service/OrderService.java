@@ -3,6 +3,7 @@ package com.pda.trading_service.service;
 import com.pda.common_service.exception.MemberException;
 import com.pda.common_service.exception.OrderException;
 import com.pda.trading_service.event.OrderCreatedEvent;
+import com.pda.trading_service.queue.TradeExecutionQueue;
 import com.pda.trading_service.service.dto.OrderEventDto;
 import com.pda.trading_service.service.kis.KisBalanceService;
 import com.pda.trading_service.service.kis.dto.KisBalanceResponse;

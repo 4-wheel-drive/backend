@@ -6,6 +6,7 @@ import com.pda.common_service.response.ResponseMessage;
 import com.pda.trading_service.domain.order.OrderStatus;
 import com.pda.trading_service.domain.order.StockOrder;
 import com.pda.trading_service.event.OrderCreatedEvent;
+import com.pda.trading_service.queue.TradeExecutionQueue;
 import com.pda.trading_service.repository.StockOrderRepository;
 import com.pda.trading_service.service.dto.OrderEventDto;
 import com.pda.trading_service.service.kis.KisOrderService;
@@ -24,7 +25,7 @@ public class KisOrderEventListener {
 
     private final KisOrderService kisOrderService;
     private final StockOrderRepository stockOrderRepository;
-    private final KisTokenReader kisTokenReader;
+    private final TradeExecutionQueue tradeExecutionQueue;
 
     @Async
     @EventListener
@@ -46,10 +47,10 @@ public class KisOrderEventListener {
 
                 log.info("[모의투자 주문 성공] 주문번호: {}, 시간: {}", orderNumber, output.getOrderTime());
 
-                // 주문 상태 및 주문번호 갱신
                 order.updateStatus(OrderStatus.CREATED);
                 order.updateTradeId(orderNumber);
                 stockOrderRepository.save(order);
+                tradeExecutionQueue.enqueue(order);
             }
 
         } catch (Exception e) {

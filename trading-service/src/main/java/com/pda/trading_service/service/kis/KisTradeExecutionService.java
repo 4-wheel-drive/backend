@@ -14,6 +14,7 @@ import com.pda.trading_service.domain.execution.TradeExecution;
 import com.pda.trading_service.domain.execution.TradeExecutionStatus;
 import com.pda.trading_service.domain.order.OrderStatus;
 import com.pda.trading_service.domain.order.StockOrder;
+import com.pda.trading_service.repository.TradeExecutionRepository;
 import com.pda.trading_service.service.dto.KisDailyCcldResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import java.util.Optional;
 public class KisTradeExecutionService {
 
     private final KisTokenReader kisTokenReader;
+    private final TradeExecutionRepository tradeExecutionRepository;
     private final WebClient webClient;
     private final StockRepository stockRepository;
 
@@ -145,42 +147,45 @@ public class KisTradeExecutionService {
 
         log.info("[KIS] 체결내역 조회 일자: {}", date);
 
-        KisDailyCcldResponse response = getDailyExecution(date, strategyMetaDto, memberDto, stockOrder);
-
-        if (response == null || response.output1() == null) {
-            log.warn("[KIS] 체결내역 응답이 비어있음 → 처리 건 없음");
+        if (tradeExecutionRepository.existsByStockOrder(stockOrder)) {
+            log.warn("[중복 차단] 주문({})에 대한 체결정보 이미 존재 → 생성 스킵", stockOrder.getTradeId());
             return null;
         }
 
-        Optional<KisDailyCcldResponse.Output1> orderData = response.output1().stream()
+        // ✅ 2️⃣ KIS API 호출
+        KisDailyCcldResponse response = getDailyExecution(date, strategyMetaDto, memberDto, stockOrder);
+        if (response == null || response.output1() == null) {
+            log.warn("[KIS] 체결내역 응답이 비어있음 → 처리 없음");
+            return null;
+        }
+
+        var orderData = response.output1().stream()
                 .filter(o -> o.orderNo().equals(stockOrder.getTradeId()))
                 .findFirst();
 
         if (orderData.isEmpty()) {
-            log.info("[KIS] 주문번호({})에 대한 체결 내역 없음 → 스킵", stockOrder.getTradeId());
+            log.info("[KIS] 주문번호({})에 대한 체결 없음 → 스킵", stockOrder.getTradeId());
             return null;
         }
 
-        KisDailyCcldResponse.Output1 info = orderData.get();
-
+        var info = orderData.get();
         int orderedQty = Integer.parseInt(info.orderQuantity());
         int filledQty = Integer.parseInt(info.filledQuantity());
         double avgPrice = Double.parseDouble(info.avgPrice());
 
         if (filledQty == 0 || filledQty < orderedQty) {
-            log.debug("[KIS] 아직 전량 체결되지 않음 → 스킵");
+            log.debug("[KIS] 아직 전량 체결되지 않음 → 재시도 대기");
             return null;
         }
 
-        TradeExecutionStatus status = TradeExecutionStatus.FILLED;
-        OrderStatus orderStatus = OrderStatus.FILLED;
-
+        var status = TradeExecutionStatus.FILLED;
+        var orderStatus = OrderStatus.FILLED;
         stockOrder.updateStatus(orderStatus);
 
-        log.info("[KIS 체결완료] 상태={} / 체결수량={} / 평균단가={} / 총금액={}", status, filledQty, avgPrice);
+        log.info("[KIS 체결완료] 주문={} / 수량={} / 평균단가={}", stockOrder.getTradeId(), filledQty, avgPrice);
 
-        Stock stock = stockRepository.findById(strategyMetaDto.stockId()).orElseThrow(() -> new ResourceNotFound(
-                ResponseMessage.STOCK_NOT_FOUND));
+        var stock = stockRepository.findById(strategyMetaDto.stockId())
+                .orElseThrow(() -> new ResourceNotFound(ResponseMessage.STOCK_NOT_FOUND));
 
         return TradeExecution.create(stockOrder, status, filledQty, avgPrice, stock);
     }
