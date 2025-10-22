@@ -2,11 +2,6 @@ spring:
   config:
     import:
       - optional:classpath:application-common.yml
-  batch:
-    jdbc:
-      initialize-schema: always
-    job:
-      enabled: false
   application:
     name: trading-service
 
